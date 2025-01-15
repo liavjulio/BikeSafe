@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
-
+import 'screens/google_login_screen.dart';
 void main() {
   runApp(BikeSafeApp());
 }
@@ -14,8 +14,10 @@ class BikeSafeApp extends StatelessWidget {
       title: 'BikeSafe',
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/',
+      home : HomeScreen(),
       routes: {
-        '/': (context) => HomeScreen(),
+        '/home': (context) => HomeScreen(),
+        '/google-login': (context) => GoogleLoginScreen(),
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
       },

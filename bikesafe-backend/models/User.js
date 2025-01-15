@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
+  googleId: { type: String, required: false },
+  phone: { type: String, required: false},
+  name: { type: String, required: false },
   email: { type: String, required: true, unique: true },
-  phone: { type: String }, 
-  password: { type: String, required: true },
-  accountLocked: { type: Boolean, default: false },
-  failedLoginAttempts: { type: Number, default: 0 },
+  password: { type: String, required: false },  // Optional initially for Google login
 });
 
-module.exports = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', userSchema);
+module.exports = User;

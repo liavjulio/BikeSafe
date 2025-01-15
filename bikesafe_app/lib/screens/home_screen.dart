@@ -120,6 +120,28 @@ class HomeScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
+                  const SizedBox(height: 20),
+
+                  // Google Login Button
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 15),
+                      backgroundColor: Colors.red, // Red color for Google
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      shadowColor: Colors.redAccent,
+                      elevation: 3,
+                    ),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/google-login'); // Make sure '/google-login' route is properly set up
+                    },
+                    child: const Text(
+                      'Login with Google',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
                   const SizedBox(height: 40),
 
                   // Footer Text
