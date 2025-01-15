@@ -37,8 +37,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+  
 
-  void _forgotPassword() async {
+void _forgotPassword() async {
   final email = _emailController.text.trim();
 
   // Validate email input
@@ -59,6 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _errorMessage = 'Password reset email sent successfully.';
     });
+
+    // Optionally, you can navigate to another screen after the password reset email is sent
+    Navigator.pushNamed(context, '/confirmation',arguments: email);  // or any other screen you want to redirect the user to
   } catch (e) {
     setState(() {
       _errorMessage = 'Failed to send password reset email: $e';

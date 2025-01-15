@@ -7,13 +7,13 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
  * Sends a verification email to the specified recipient.
  * @param {string} recipientEmail - The recipient's email address.
  */
-const sendVerificationEmail = async (recipientEmail) => {
+const sendVerificationEmail = async (recipientEmail, verificationCode) => {
   const msg = {
-    to: recipientEmail, // Recipient email
-    from: process.env.FROM_EMAIL, // Sender email (must be verified in SendGrid)
+    to: recipientEmail, 
+    from: process.env.FROM_EMAIL, 
     subject: 'Verify Your Account',
-    text: 'Please verify your account to complete registration.',
-    html: '<strong>Please verify your account to complete registration.</strong>',
+    text: `Your verification code is: ${verificationCode}`,
+    html: `<strong>Your verification code is: ${verificationCode}</strong>`,
   };
 
   try {
