@@ -122,7 +122,7 @@ app.post('/auth/google/callback', async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token, user });
+    res.status(200).json({ token, id:user._id });
 
   } catch (error) {
     console.error('Error during Google authentication:', error);
