@@ -2,6 +2,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sgMail = require('@sendgrid/mail');
+const Feedback = require('../models/Feedback');
 
 // Configure SendGrid with your API key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -47,8 +48,11 @@ exports.login = async (req, res) => {
     // Generate a JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.status(200).json({ token, message: 'Login successful' });
-  } catch (err) {
+    res.status(200).json({
+      token,
+      userId: user._id, // Include the userId in the response
+      message: 'Login successful',
+    });  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
@@ -87,6 +91,68 @@ exports.linkSensor = async (req, res) => {
 
     res.status(200).json({ message: 'Sensor linked successfully' });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+exports.submitFeedback = async (req, res) => {
+  console.log('Request received at /feedback:', req.body); // Add this
+  const { userId, feedback } = req.body;
+
+  try {
+    const newFeedback = new Feedback({ userId, feedback });
+    await newFeedback.save();
+
+    res.status(201).json({ message: 'Feedback submitted successfully' });
+  } catch (err) {
+    console.error('Error submitting feedback:', err); // Add this
+    res.status(500).json({ error: err.message });
+  }
+};
+exports.updateAlertPreferences = async (req, res) => {
+  const { userId, alerts } = req.body;
+
+  try {
+    console.log(`Updating alert preferences for user: ${userId}`);
+    console.log(`New Preferences:`, alerts);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update the user's alerts
+    user.alerts = alerts;
+    await user.save();
+
+    console.log(`Updated preferences in DB: ${user.alerts}`);
+    res.status(200).json(user.alerts.reduce((prefs, alert) => {
+      prefs[alert] = true;
+      return prefs;
+    }, { 'safe-zone': false, 'battery': false })); // Default values for all alerts
+  } catch (err) {
+    console.error('Error updating alert preferences:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+exports.getAlertPreferences = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    console.log(`Fetching alert preferences for user: ${userId}`);
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log(`User found: ${user.email}, Preferences: ${user.alerts}`);
+
+    res.status(200).json(user.alerts.reduce((prefs, alert) => {
+      prefs[alert] = true;
+      return prefs;
+    }, { 'safe-zone': false, 'battery': false })); // Default values for all alerts
+  } catch (err) {
+    console.error('Error fetching alert preferences:', err);
     res.status(500).json({ error: err.message });
   }
 };

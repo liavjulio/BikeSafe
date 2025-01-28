@@ -11,7 +11,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcryptjs');  // Added bcrypt for password hashing
 const User = require('./models/User');
 const authRoutes = require('./routes/authRoutes');
-
+const locationRoutes = require('./routes/locationRoutes');
 const app = express();
 
 // Initialize Passport.js
@@ -71,7 +71,7 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 app.use('/api/auth', authRoutes);
-
+app.use('/api/location', locationRoutes);
 // Google callback route after successful Google login
 app.post('/auth/google/callback', async (req, res) => {
   const { idToken, password } = req.body;

@@ -71,8 +71,11 @@ exports.login = async (req, res) => {
 
     // Generate a JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token });
-  } catch (err) {
+    res.status(200).json({
+      token,
+      userId: user._id,
+      message: 'Login successful',
+    });  } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: err.message });
   }
@@ -139,6 +142,8 @@ exports.verifyCodeForPasswordReset = async (req, res) => {
     // Hash the new password and save it
     user.password = newPassword;
     user.verificationCode = null; // Clear the verification code after it's used
+    user.failedLoginAttempts = 0; // Reset failed attempts after password reset
+    user.accountLocked = false;  // Unlock the account
     await user.save();
 
     res.status(200).json({ message: 'Password reset successfully' });

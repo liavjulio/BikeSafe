@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema({
   verificationCode: { type: String, required: false },  
   failedLoginAttempts: { type: Number, default: 0 },
   accountLocked: { type: Boolean, default: false },
+  alerts: { type: [String], enum: ['safe-zone', 'battery'],default: ['safe-zone'],
+  },
 });
 
 const User = mongoose.model('User', userSchema);
