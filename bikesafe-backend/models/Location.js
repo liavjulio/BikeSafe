@@ -1,3 +1,4 @@
+//bikesafe-backend/models/Location.js
 const mongoose = require('mongoose');
 
 const locationSchema = new mongoose.Schema({
@@ -7,14 +8,13 @@ const locationSchema = new mongoose.Schema({
     longitude: { type: Number, required: true },
   },
   safeZone: {
-    radius: { type: Number, required: false }, // in meters
+    radius: { type: Number, required: false }, // meters
     center: {
       latitude: { type: Number, required: false },
       longitude: { type: Number, required: false },
     },
   },
-  alerts: [{ type: String, enum: ['safe-zone', 'distance'], default: [] }],
-  batteryLevel: { type: Number, default: 100 }, 
+  batteryLevel: { type: Number, default: 100 },
 });
 
 const Location = mongoose.model('Location', locationSchema);

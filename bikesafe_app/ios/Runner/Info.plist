@@ -41,14 +41,21 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to display the bike's position.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs continuous access to location for tracking.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<!-- Google Sign-In Configuration -->
 	<key>GIDClientID</key>
-	<string>1087501086163-a5lj3dgfdhhs3mrjvf64613go9fg5134.apps.googleusercontent.com</string>
-
+	<string>$(GOOGLE_SIGN_IN_CLIENT_ID)</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -59,5 +66,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>GMSApiKey</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
 </dict>
 </plist>

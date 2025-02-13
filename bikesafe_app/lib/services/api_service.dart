@@ -1,9 +1,12 @@
+//bikesafe_app/lib/services/api_service.dart
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String _baseUrl = 'http://localhost:5001/api';
-
+static final String _baseUrl = Platform.isAndroid
+      ? 'http://10.0.2.2:5001/api'  // Android Emulator
+      : 'http://localhost:5001/api'; // iOS Simulator & Web
   static Future<Map<String, dynamic>> login(String email, String password) async {
   final response = await http.post(
     Uri.parse('$_baseUrl/auth/login'),
@@ -19,7 +22,7 @@ class ApiService {
 }
 static Future<bool> updateAlertPreferences(String userId, String token, List<String> preferences) async {
   final response = await http.post(
-    Uri.parse('http://localhost:5001/api/auth/update-alerts'),
+    Uri.parse('$_baseUrl/alerts/preferences'),
     headers: {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
@@ -42,7 +45,7 @@ static Future<Map<String, bool>> fetchAlertPreferences(String userId, String tok
   print('Sending request to fetch preferences for $userId');
 
   final response = await http.get(
-    Uri.parse('$_baseUrl/auth/alert-preferences/$userId'),
+    Uri.parse('$_baseUrl/alerts/preferences?userId=$userId'), // ✅ שינוי מ- `/alerts/preferences/$userId`
     headers: {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
@@ -64,7 +67,7 @@ static Future<Map<String, bool>> fetchAlertPreferences(String userId, String tok
 }
 static Future<bool> submitFeedback(String userId, String feedback, String token) async {
   final response = await http.post(
-    Uri.parse('http://localhost:5001/api/auth/feedback'),
+    Uri.parse('$_baseUrl/api/auth/feedback'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token', // Pass the token here
@@ -82,7 +85,7 @@ static Future<bool> submitFeedback(String userId, String feedback, String token)
 static Future<Map<String, dynamic>> verifyCode(String code) async {
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:5001/api/auth/verify-code'),
+        Uri.parse('$_baseUrl/api/auth/verify-code'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'code': code}),
       );
@@ -129,6 +132,18 @@ static Future<void> verifyCodeAndResetPassword(String email,String code, String 
     return jsonDecode(response.body);
   } else {
     throw Exception('Failed to reset password: ${response.body}');
+  }
+}
+static Future<List<Map<String, dynamic>>> fetchSensorHistory(String userId, String sensorType, String token) async {
+  final response = await http.get(
+    Uri.parse('$_baseUrl/sensor/history?userId=$userId&type=$sensorType'), // 🔄 שים לב לשינוי מ-sensorId ל-type
+    headers: {'Authorization': 'Bearer $token'},
+  );
+
+  if (response.statusCode == 200) {
+    return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+  } else {
+    throw Exception('Failed to load sensor history');
   }
 }
 }

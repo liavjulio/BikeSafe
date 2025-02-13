@@ -1,4 +1,7 @@
+//bikesafe-backend/controllers/authController.js
 const User = require('../models/User');
+const Location = require('../models/Location'); // Import Location model
+
 const jwt = require('jsonwebtoken');
 const emailSender = require('../utils/emailSender');
 
@@ -81,7 +84,29 @@ exports.login = async (req, res) => {
   }
 };
 // In authController.js
+exports.changePassword = async (req, res) => {
+  const { userId } = req.params;
+  const { password } = req.body;
 
+  try {
+   
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { password: password },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Error updating password:', err);
+    res.status(500).json({ message: 'Error updating password' });
+  }
+};
 exports.verifyCode = async (req, res) => {
   const { code } = req.body;
 
@@ -101,6 +126,58 @@ exports.verifyCode = async (req, res) => {
     res.status(500).json({ message: 'Error verifying code' });
   }
 };
+
+exports.getUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select('-password -verificationCode');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching user profile' });
+  }
+};
+
+// Update User Profile
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, phone } = req.body;
+
+    const user = await User.findByIdAndUpdate(userId, { name, phone }, { new: true }).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', user });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating profile' });
+  }
+};
+
+// Delete User Account
+exports.deleteUserAccount = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    await Location.deleteMany({ userId: userId });
+
+    await User.findByIdAndDelete(userId);
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting account' });
+  }
+};
+
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 

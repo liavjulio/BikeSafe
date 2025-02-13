@@ -1,3 +1,4 @@
+//bikesafe-backend/utils/emailSender.js
 const sgMail = require('@sendgrid/mail');
 
 // Set the SendGrid API key

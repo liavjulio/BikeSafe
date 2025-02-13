@@ -1,45 +1,94 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# General OS files
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+Thumbs.db
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter & Dart specific
 .dart_tool/
+.packages
+.pub/
+build/
 .flutter-plugins
 .flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
+.flutter-versions
+.metadata
+android/app/key.properties
 
-# Symbolication related
-app.*.symbols
+# Xcode related
+**/xcuserdata/
+**/DerivedData/
+**/*.xcworkspace/
+**/*.xcodeproj/project.xcworkspace/
+**/*.xcodeproj/xcuserdata/
+**/*.xcodeproj/project.xcworkspace/xcuserdata/
+Pods/
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
 
-# Obfuscation related
-app.*.map.json
+# Android related
+**/*.iml
+.gradle/
+.local.properties
+.idea/
+android/app/google-services.json
+android/app/src/debug/
+android/app/src/profile/
+android/app/src/release/
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Secrets & Environment Variables
+.env
+*.key
+*.pem
+*.p12
+
+# Generated files
+**/*.generated.*
+**/*.moved-aside
+**/*.mode1v3
+**/*.mode2v3
+**/*.pbxuser
+**/*.perspectivev3
+**/*sync/
+*.sconsign.dblite
+*.tags*
+
+# CocoaPods related
+ios/Pods/
+ios/.symlinks/
+ios/.generated/
+
+# Virtual environments
+**/.vagrant/
+
+# Service Definitions
+ServiceDefinitions.json
+
+# Workspace-related files
+WORKSPACE
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/caches
+.idea/modules.xml
+
+# Plugin Registrations (generated)
+Runner/GeneratedPluginRegistrant.*
+
+# Exceptions
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
+# Sensitive files
+.env
+client_secret_*
+google-services.json
+google_maps_api.xml
+strings.xml
+ios/Flutter/Secrets.xcconfig

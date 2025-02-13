@@ -1,3 +1,4 @@
+//bikesafe-backend/models/User.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -10,7 +11,10 @@ const userSchema = new mongoose.Schema({
   verificationCode: { type: String, required: false },  
   failedLoginAttempts: { type: Number, default: 0 },
   accountLocked: { type: Boolean, default: false },
-  alerts: { type: [String], enum: ['safe-zone', 'battery'],default: ['safe-zone'],
+  alerts: {
+    type: [String],
+    enum: ['safe-zone', 'battery', 'temperature', 'theft', 'sensor-failure'],
+    default: ['safe-zone', 'battery'], // ברירת מחדל
   },
 });
 

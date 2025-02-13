@@ -1,9 +1,10 @@
+//bikesafe-backend/controllers/userController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const sgMail = require('@sendgrid/mail');
 const Feedback = require('../models/Feedback');
-
+const Location = require('../models/Location');
 // Configure SendGrid with your API key
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -22,6 +23,14 @@ exports.register = async (req, res) => {
     // Create a new user
     const newUser = new User({ email, password: hashedPassword });
     await newUser.save();
+    const location = new Location({
+      userId: newUser._id,
+      currentLocation: {
+        latitude: 32.0853, // or any default coordinate you prefer
+        longitude: 34.7818
+      }
+    });
+    await location.save();
 
     // Send verification email
     await sendVerificationEmail(email);
@@ -74,22 +83,6 @@ exports.resetPassword = async (req, res) => {
     await user.save();
 
     res.status(200).json({ message: 'Password updated successfully' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-exports.linkSensor = async (req, res) => {
-  const { userId, sensorId } = req.body;
-
-  try {
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Placeholder logic for linking sensor
-    user.sensorId = sensorId;
-    await user.save();
-
-    res.status(200).json({ message: 'Sensor linked successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

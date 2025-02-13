@@ -1,7 +1,11 @@
+//bikesafe_app/lib/screens/google_login_screen.dart
+import 'dart:io'; // For detecting platform
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 class GoogleLoginScreen extends StatefulWidget {
   @override
@@ -9,135 +13,150 @@ class GoogleLoginScreen extends StatefulWidget {
 }
 
 class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],);
+  
   TextEditingController _passwordController = TextEditingController();
 
+  // Function to determine the correct API base URL for different platforms
+  String getApiBaseUrl() {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:5001'; // Android Emulator
+    } else if (Platform.isIOS) {
+      return 'http://localhost:5001'; // iOS Simulator
+    } else {
+      return 'http://192.168.X.X:5001'; // Replace X.X with your local IP for physical devices
+    }
+  }
+
   // Google Sign-In Function
- Future<void> _loginWithGoogle() async {
-  try {
-    print("Attempting to sign in with Google...");
-    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+  Future<void> _loginWithGoogle() async {
+    try {
+      print("Attempting to sign in with Google...");
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-    if (googleUser != null) {
-      print("Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
+      if (googleUser != null) {
+        print("Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-      final String? idToken = googleAuth.idToken;
-      final String? accessToken = googleAuth.accessToken;
+        final String? idToken = googleAuth.idToken;
+        final String? accessToken = googleAuth.accessToken;
 
-      if (idToken == null || accessToken == null) {
-        print("Error: Missing ID token or access token from Google.");
-        throw Exception("Google authentication tokens are null.");
-      }
-
-      print("Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
-
-      // Now send the ID token to the backend for authentication
-      final response = await http.post(
-        Uri.parse('http://localhost:5001/auth/google/callback'),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'idToken': idToken,
-          'accessToken': accessToken,
-        }),
-      );
-
-      print("Response from backend: ${response.statusCode}, Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final responseBody = jsonDecode(response.body);
-
-        // Safely extract token and userId from the response
-        final String? token = responseBody['token'];
-        final Map<String, dynamic>? user = responseBody['user'];
-        final String? userId = user?['_id'];
-
-        print("Extracted data - Token: $token, UserId: $userId");
-
-        // Validate extracted data
-        if (token == null || userId == null) {
-          print("Error: Missing token or userId in backend response.");
-          throw Exception("Invalid response from backend: Missing token or userId.");
+        if (idToken == null || accessToken == null) {
+          print("Error: Missing ID token or access token from Google.");
+          throw Exception("Google authentication tokens are null.");
         }
 
-        // Navigate to main screen with arguments
-        Navigator.pushNamed(
-          context,
-          '/main',
-          arguments: {'userId': userId, 'token': token},
+        print("Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
+
+        // Get the correct API base URL
+        String apiBaseUrl = getApiBaseUrl();
+        print("Using API base URL: $apiBaseUrl");
+
+        // Now send the ID token to the backend for authentication
+        final response = await http.post(
+          Uri.parse('$apiBaseUrl/auth/google/callback'), // Dynamically selects API URL
+          headers: <String, String>{
+            'Content-Type': 'application/json',
+          },
+          body: json.encode({
+            'idToken': idToken,
+            'accessToken': accessToken,
+          }),
         );
-      } else {
-        final responseBody = jsonDecode(response.body);
-        print("Backend error: ${responseBody['message']}");
 
-        if (responseBody['message'] == 'Please set a password to continue.') {
-          print("Prompting user to set a password...");
-          // Prompt the user to set a password
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Text('Set a Password'),
-                content: TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: InputDecoration(hintText: 'Enter password'),
-                ),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () async {
-                      final password = _passwordController.text.trim();
-                      print("User entered password: $password");
+        print("Response from backend: ${response.statusCode}, Body: ${response.body}");
 
-                      // Send password to the backend
-                      final setPasswordResponse = await http.post(
-                        Uri.parse('http://localhost:5001/auth/google/callback'),
-                        headers: <String, String>{
-                          'Content-Type': 'application/json',
-                        },
-                        body: json.encode({
-                          'idToken': idToken,
-                          'password': password,
-                        }),
-                      );
+        if (response.statusCode == 200) {
+          final responseBody = jsonDecode(response.body);
 
-                      print(
-                          "Response from backend after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
+          // Extract token and userId from the response
+          final String? token = responseBody['token'];
+          final String? userId = responseBody['userId'];
 
-                      if (setPasswordResponse.statusCode == 200) {
-                        print("Password set successfully. Navigating to home...");
-                        Navigator.pushNamed(context, '/home');
-                      } else {
-                        print("Failed to set password.");
-                      }
-                    },
-                    child: Text('Set Password'),
-                  ),
-                ],
-              );
-            },
+          if (token == null || userId == null) {
+            print("Error: Missing token or userId in backend response.");
+            throw Exception("Invalid response from backend: Missing token or userId.");
+          }
+
+          // Navigate to main screen with arguments
+          Navigator.pushNamed(
+            context,
+            '/main',
+            arguments: {'userId': userId, 'token': token},
           );
         } else {
-          print("Unhandled backend error: ${responseBody['message']}");
+          final responseBody = jsonDecode(response.body);
+          print("Backend error: ${responseBody['message']}");
+
+          if (responseBody['message'] == 'Please set a password to continue.') {
+            print("Prompting user to set a password...");
+            _promptForPassword(idToken);
+          } else {
+            print("Unhandled backend error: ${responseBody['message']}");
+          }
         }
+      } else {
+        print("Google sign-in canceled by the user.");
       }
-    } else {
-      print("Google sign-in canceled by the user.");
+    } catch (error) {
+      print("Google sign-in failed: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Google sign-in failed. Please try again.")),
+      );
     }
-  } catch (error) {
-    print("Google sign-in failed: $error");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Google sign-in failed. Please try again.")),
+  }
+
+  // Function to show password dialog
+  void _promptForPassword(String idToken) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Set a Password'),
+          content: TextField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: InputDecoration(hintText: 'Enter password'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () async {
+                final password = _passwordController.text.trim();
+                print("User entered password: $password");
+
+                // Send password to the backend
+                String apiBaseUrl = getApiBaseUrl();
+                final setPasswordResponse = await http.post(
+                  Uri.parse('$apiBaseUrl/auth/google/callback'),
+                  headers: <String, String>{
+                    'Content-Type': 'application/json',
+                  },
+                  body: json.encode({
+                    'idToken': idToken,
+                    'password': password,
+                  }),
+                );
+
+                print("Response from backend after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
+
+                if (setPasswordResponse.statusCode == 200) {
+                  print("Password set successfully. Navigating to home...");
+                  Navigator.pushNamed(context, '/home');
+                } else {
+                  print("Failed to set password.");
+                }
+              },
+              child: Text('Set Password'),
+            ),
+          ],
+        );
+      },
     );
   }
-}
 
   @override
   void dispose() {
-    // Dispose of the password controller
     _passwordController.dispose();
     super.dispose();
   }
@@ -147,7 +166,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Login with Google'),
-        backgroundColor: Colors.blue, // AppBar color
+        backgroundColor: Colors.blue,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -177,8 +196,8 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   style: TextStyle(fontSize: 18),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // Set button color
-                  minimumSize: Size(double.infinity, 50), // Full width button
+                  backgroundColor: Colors.blue,
+                  minimumSize: Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -189,7 +208,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
               // Back to login
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Go back to the previous screen
+                  Navigator.pop(context);
                 },
                 child: Text('Back to Login'),
               ),

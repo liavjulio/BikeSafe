@@ -1,3 +1,4 @@
+//bikesafe-backend/server.js
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -10,8 +11,11 @@ const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcryptjs');  // Added bcrypt for password hashing
 const User = require('./models/User');
+const Location = require('./models/Location');
 const authRoutes = require('./routes/authRoutes');
 const locationRoutes = require('./routes/locationRoutes');
+const sensorRoutes = require('./routes/sensorRoutes');
+const alertRoutes = require('./routes/alertRoutes');
 const app = express();
 
 // Initialize Passport.js
@@ -21,6 +25,11 @@ app.use(passport.session());
 
 // CORS configuration
 app.use(cors());
+const CLIENT_IDS = [
+  process.env.GOOGLE_CLIENT_ID_WEB,
+  process.env.GOOGLE_CLIENT_ID_ANDROID,
+  process.env.GOOGLE_CLIENT_ID_IOS
+];
 
 // Google OAuth Strategy (Passport.js strategy)
 passport.use(new GoogleStrategy({
@@ -72,15 +81,21 @@ app.get('/auth/google',
 );
 app.use('/api/auth', authRoutes);
 app.use('/api/location', locationRoutes);
+app.use('/api/sensor', sensorRoutes);
+app.use('/api/alerts', alertRoutes);
 // Google callback route after successful Google login
 app.post('/auth/google/callback', async (req, res) => {
   const { idToken, password } = req.body;
-
+  const CLIENT_IDS = [
+    process.env.GOOGLE_CLIENT_ID_WEB,
+    process.env.GOOGLE_CLIENT_ID_ANDROID,
+    process.env.GOOGLE_CLIENT_ID_IOS
+  ];
   try {
     const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: CLIENT_IDS,
     });
 
     const payload = ticket.getPayload();
@@ -102,7 +117,14 @@ app.post('/auth/google/callback', async (req, res) => {
       }
 
       user.password = password;
-
+      const location = new Location({
+        userId: user._id,
+        currentLocation: {
+          latitude: 32.0853, // or any default coordinate you prefer
+          longitude: 34.7818
+        }
+      });
+      await location.save();
       try {
         await user.save();
         console.log('New user saved:', user);
@@ -122,7 +144,7 @@ app.post('/auth/google/callback', async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token, id:user._id });
+    res.status(200).json({ token, userId:user._id });
 
   } catch (error) {
     console.error('Error during Google authentication:', error);
@@ -136,4 +158,4 @@ mongoose.connect(process.env.MONGO_URI, { dbName: 'bikesafe' })
   .catch((err) => console.error('MongoDB connection error:', err));
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));

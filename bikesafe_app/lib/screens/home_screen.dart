@@ -1,3 +1,4 @@
+//bikesafe_app/lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -11,10 +12,17 @@ class HomeScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
-        ),
+        ),automaticallyImplyLeading: false,
         backgroundColor: Colors.lightBlueAccent,
         centerTitle: true,
         elevation: 4.0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.help_outline, color: Colors.white),
+            tooltip: "Help & Instructions",
+            onPressed: () => Navigator.pushNamed(context, '/help'),
+          ),
+        ],
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -79,69 +87,23 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 40),
 
                   // Login Button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 15),
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadowColor: Colors.blueAccent,
-                      elevation: 3,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                  _buildButton(context, "Login", Colors.blue, Icons.login, '/login'),
+
+                  const SizedBox(height: 15),
 
                   // Register Button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 15),
-                      backgroundColor: Colors.blue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadowColor: Colors.greenAccent,
-                      elevation: 3,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/register');
-                    },
-                    child: const Text(
-                      'Register',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                  _buildButton(context, "Register", Colors.blue, Icons.person_add, '/register'),
+
+                  const SizedBox(height: 15),
 
                   // Google Login Button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 50, vertical: 15),
-                      backgroundColor: Colors.red, // Red color for Google
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      shadowColor: Colors.redAccent,
-                      elevation: 3,
-                    ),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/google-login'); // Make sure '/google-login' route is properly set up
-                    },
-                    child: const Text(
-                      'Login with Google',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
+                  _buildButton(context, "Login with Google", Colors.red, Icons.g_mobiledata, '/google-login'),
+
+                  const SizedBox(height: 20),
+
+                  // Help & Instructions Button
+                  _buildButton(context, "How to Use", Colors.grey, Icons.help_outline, '/help'),
+
                   const SizedBox(height: 40),
 
                   // Footer Text
@@ -158,6 +120,25 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Reusable Button Widget
+  Widget _buildButton(BuildContext context, String title, Color color, IconData icon, String route) {
+    return ElevatedButton.icon(
+      onPressed: () => Navigator.pushNamed(context, route),
+      icon: Icon(icon, size: 24),
+      label: Text(
+        title,
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 5,
       ),
     );
   }
