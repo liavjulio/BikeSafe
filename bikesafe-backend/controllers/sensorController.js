@@ -1,24 +1,22 @@
-const SensorHistory = require('../models/SensorHistory'); // היסטוריית חיישנים
-const Sensor = require('../models/Sensor'); // מודל חיישן
-const Location = require('../models/Location'); // מיקומים ואזורי בטיחות
+const SensorHistory = require('../models/SensorHistory'); 
+const Sensor = require('../models/Sensor'); 
+const Location = require('../models/Location'); 
 const mongoose = require('mongoose');
-const { sendAlert } = require('./alertController'); // ✅ ייבוא פונקציה לשליחת התראות
+const { sendAlert } = require('./alertController'); 
 
-// ✅ פונקציה לבדיקת יציאה מהאזור הבטוח
 const checkIfOutsideSafeZone = async (userId, latitude, longitude) => {
     const location = await Location.findOne({ userId });
 
     if (!location || !location.safeZone || !location.safeZone.center) {
-        return false; // אם אין אזור בטוח מוגדר, אין צורך לשלוח התראה
+        return false; 
     }
 
     const { center, radius } = location.safeZone;
     const distance = getDistance({ latitude, longitude }, center);
     
-    return distance > radius; // אם המרחק חורג מהרדיוס, יש לשלוח התראה
+    return distance > radius;
 };
 
-// ✅ חישוב מרחק בין שתי נקודות גיאוגרפיות (נוסחת הווינסיין)
 const getDistance = (location1, location2) => {
     const toRad = (value) => (value * Math.PI) / 180;
     
@@ -35,54 +33,48 @@ const getDistance = (location1, location2) => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 };
+
+// ✅ שליפת נתוני סנסור ע"י userId
 exports.getSensorData = async (req, res) => {
-  const { userId, type } = req.query;
+    const { userId } = req.query;
 
-  try {
-      const sensor = await Sensor.findOne({ userId, type });
+    try {
+        const sensor = await Sensor.findOne({ userId });
 
-      if (!sensor || !sensor.data) {
-          return res.status(404).json({ message: "Sensor data not found" });
-      }
+        if (!sensor || !sensor.data) {
+            return res.status(404).json({ message: "Sensor data not found" });
+        }
 
-      res.status(200).json(sensor.data); // מחזירים רק את הנתונים של החיישן
-  } catch (error) {
-      console.error("Error fetching sensor data:", error);
-      res.status(500).json({ error: error.message });
-  }
+        res.status(200).json(sensor.data);
+    } catch (error) {
+        console.error("Error fetching sensor data:", error);
+        res.status(500).json({ error: error.message });
+    }
 };
-// ✅ יצירת חיישן חדש
+
+// ✅ יצירת סנסור חדש
 exports.createSensor = async (req, res) => {
     try {
-        console.log("Incoming request body:", req.body);
+        const { userId, sensorId, data } = req.body;
 
-        const { userId, sensorId, type, data } = req.body;
-
-        if (!userId || !sensorId || !type || !data) {
-            return res.status(400).json({ message: 'Missing required fields' });
+        if (!userId || !sensorId) {
+            return res.status(400).json({ message: 'Missing required fields (userId or sensorId)' });
         }
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: 'Invalid userId format' });
         }
-        
-        // בדיקה אם החיישן כבר קיים
-        const existingSensor = await Sensor.findOne({ userId, type });
-          if (existingSensor) {
-            return res.status(400).json({ message: 'A sensor of this type already exists for this user' });
-          }
+
+        const existingSensor = await Sensor.findOne({ userId, sensorId });
+        if (existingSensor) {
+            return res.status(400).json({ message: 'A sensor with this ID already exists for this user' });
+        }
 
         const sensor = new Sensor({
             userId: new mongoose.Types.ObjectId(userId),
             sensorId,
-            type,
-            data: {
-                temperature: type === "temperature" ? data.temperature : undefined,
-                latitude: type === "gps" ? data.latitude : undefined,
-                longitude: type === "gps" ? data.longitude : undefined,
-                batteryLevel: type === "battery" ? data.batteryLevel : undefined,
-                humidity: type === "humidity" ? data.humidity : undefined
-            }
+            data: data || {},
+            lastUpdated: Date.now()
         });
 
         await sensor.save();
@@ -93,107 +85,138 @@ exports.createSensor = async (req, res) => {
     }
 };
 
-// ✅ עדכון נתוני חיישן + בדיקות התראה
+// ✅ בדיקת כשלון חיישן (לא מעדכן בזמן)
 const checkSensorFailure = async (sensor) => {
-  const lastUpdate = new Date(sensor.lastUpdated);
-  const now = new Date();
-  const diffMinutes = (now - lastUpdate) / (1000 * 60);
+    const lastUpdate = new Date(sensor.lastUpdated);
+    const now = new Date();
+    const diffMinutes = (now - lastUpdate) / (1000 * 60);
 
-  if (diffMinutes > 10) { // חיישן לא מעדכן יותר מ-10 דקות
-      await sendAlert(sensor.userId, 'sensor-failure', `Sensor ${sensor.sensorId} has stopped responding.`);
-  }
-};
-
-// ✅ עדכון נתוני חיישן עם תמיכה בהתראות נוספות
-exports.updateSensorData = async (req, res) => {
-  const { sensorId, data } = req.body;
-
-  try {
-      let sensor = await Sensor.findOne({ sensorId });
-
-      if (!sensor) {
-          return res.status(404).json({ message: "Sensor not found" });
-      }
-
-      // בדיקה אם החיישן חדל לעדכן נתונים לזמן ממושך
-      await checkSensorFailure(sensor);
-
-      if (sensor.type === "temperature" && data.temperature !== undefined) {
-          sensor.data.temperature = data.temperature;
-
-          if (data.temperature > 60) {
-              await sendAlert(sensor.userId, 'temperature', `Warning: High temperature detected (${data.temperature}°C)!`);
-          }
-
-          // אם הטמפרטורה עולה מעל 80°C, מכבים את הסוללה
-          if (data.temperature > 80) {
-              await sendAlert(sensor.userId, 'battery', `Battery shut down due to extreme heat (${data.temperature}°C).`);
-          }
-      }
-
-      if (sensor.type === "gps" && data.latitude !== undefined && data.longitude !== undefined) {
-        console.log(`Updating GPS sensor: ${sensorId}, New Location: ${data.latitude}, ${data.longitude}`);
-        sensor.data.latitude = data.latitude;
-        sensor.data.longitude = data.longitude;
-    
-        let location = await Location.findOne({ userId: sensor.userId });
-        if (!location) {
-            console.log(`Creating new location entry for user ${sensor.userId}`);
-            location = new Location({
-                userId: sensor.userId,
-                currentLocation: { latitude: data.latitude, longitude: data.longitude }
-            });
-        } else {
-            console.log(`Updating existing location for user ${sensor.userId}`);
-            location.currentLocation = { latitude: data.latitude, longitude: data.longitude };
-        }
-        await location.save();
+    if (diffMinutes > 10) {
+        await sendAlert(sensor.userId, 'sensor-failure', `Sensor ${sensor.sensorId} has stopped responding.`);
     }
-
-      if (sensor.type === "battery" && data.batteryLevel !== undefined) {
-          sensor.data.batteryLevel = data.batteryLevel;
-
-          if (data.batteryLevel < 10) {
-              await sendAlert(sensor.userId, 'battery', 'Battery is critically low!');
-          }
-      }
-
-      sensor.lastUpdated = Date.now();
-      await sensor.save();
-
-      res.status(200).json({ message: "Sensor data updated", sensor });
-  } catch (error) {
-      console.error("Error updating sensor data:", error);
-      res.status(500).json({ error: error.message });
-  }
 };
 
-// ✅ בדיקת חיבור או ניתוק GPS
+// ✅ עדכון נתוני חיישן
+exports.updateSensorData = async (req, res) => {
+    const { sensorId, data } = req.body;
+
+    try {
+        let sensor = await Sensor.findOne({ sensorId });
+
+        if (!sensor) {
+            console.log("Sensor not found! Auto-creating sensor...");
+
+            sensor = new Sensor({
+                userId: req.user.id,
+                sensorId,
+                data: {},
+                lastUpdated: Date.now()
+            });
+
+            await sensor.save();
+        }
+
+        await checkSensorFailure(sensor);
+
+        // Update fields based on data sent
+        if (data.temperature !== undefined) {
+            sensor.data.temperature = data.temperature;
+
+            if (data.temperature > 60) {
+                await sendAlert(sensor.userId, 'temperature', `Warning: High temperature detected (${data.temperature}°C)!`);
+            }
+
+            if (data.temperature > 80) {
+                await sendAlert(sensor.userId, 'battery', `Battery shut down due to extreme heat (${data.temperature}°C).`);
+            }
+        }
+
+        if (data.latitude !== undefined && data.longitude !== undefined) {
+            sensor.data.latitude = data.latitude;
+            sensor.data.longitude = data.longitude;
+
+            let location = await Location.findOne({ userId: sensor.userId });
+            if (!location) {
+                location = new Location({
+                    userId: sensor.userId,
+                    currentLocation: { latitude: data.latitude, longitude: data.longitude }
+                });
+            } else {
+                location.currentLocation = { latitude: data.latitude, longitude: data.longitude };
+            }
+
+            await location.save();
+
+            const outsideSafeZone = await checkIfOutsideSafeZone(sensor.userId, data.latitude, data.longitude);
+            if (outsideSafeZone) {
+                await sendAlert(sensor.userId, 'safe-zone', `Device is outside the safe zone!`);
+            }
+        }
+
+        if (data.batteryLevel !== undefined) {
+            sensor.data.batteryLevel = data.batteryLevel;
+
+            if (data.batteryLevel < 10) {
+                await sendAlert(sensor.userId, 'battery', 'Battery is critically low!');
+            }
+        }
+
+        if (data.humidity !== undefined) {
+            sensor.data.humidity = data.humidity;
+        }
+
+        sensor.lastUpdated = Date.now();
+        await sensor.save();
+
+const now = Date.now();
+
+const lastSaved = sensor.lastSavedToHistory
+  ? new Date(sensor.lastSavedToHistory).getTime()
+  : 0; // 0 makes sure we always save the first time
+
+if (now - lastSaved >= 30 * 1000) {
+  await new SensorHistory({
+    userId: sensor.userId,
+    sensorId: sensor.sensorId,
+    data: sensor.data,
+    timestamp: new Date()
+  }).save();
+
+  sensor.lastSavedToHistory = new Date(now);
+  await sensor.save();
+
+  console.log(`✅ Sensor history saved at ${new Date(now).toISOString()}`);
+} else {
+  console.log(`⏳ Skipped save. Next allowed save at ${new Date(lastSaved + 30 * 1000).toISOString()}`);
+}
+        res.status(200).json({ message: "Sensor data updated", sensor });
+    } catch (error) {
+        console.error("Error updating sensor data:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 exports.checkGPSConnection = async (req, res) => {
-  const { sensorId, status } = req.body; // status יכול להיות "connected" או "disconnected"
+    const { sensorId, status } = req.body;
 
-  try {
-      let sensor = await Sensor.findOne({ sensorId });
+    try {
+        let sensor = await Sensor.findOne({ sensorId });
 
-      if (!sensor) {
-          return res.status(404).json({ message: "Sensor not found" });
-      }
+        if (!sensor) {
+            return res.status(404).json({ message: "Sensor not found" });
+        }
 
-      if (sensor.type !== "gps") {
-          return res.status(400).json({ message: "This sensor is not a GPS sensor" });
-      }
+        if (status === "disconnected") {
+            await sendAlert(sensor.userId, 'gps', 'GPS sensor has lost connection!');
+        } else if (status === "connected") {
+            await sendAlert(sensor.userId, 'gps', 'GPS sensor is back online.');
+        }
 
-      if (status === "disconnected") {
-          await sendAlert(sensor.userId, 'gps', 'GPS sensor has lost connection!');
-      } else if (status === "connected") {
-          await sendAlert(sensor.userId, 'gps', 'GPS sensor is back online.');
-      }
-
-      res.status(200).json({ message: `GPS connection updated: ${status}` });
-  } catch (error) {
-      console.error("Error updating GPS connection:", error);
-      res.status(500).json({ error: error.message });
-  }
+        res.status(200).json({ message: `GPS connection updated: ${status}` });
+    } catch (error) {
+        console.error("Error updating GPS connection:", error);
+        res.status(500).json({ error: error.message });
+    }
 };
 
 // ✅ שליפת כל החיישנים של משתמש
@@ -231,78 +254,8 @@ exports.deleteSensor = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-const updateMockSensorsForUser = async (userId) => {
-  const sensors = await Sensor.find({ userId });
 
-  for (let sensor of sensors) {
-      const newData = generateRandomData(sensor.type);
-      sensor.data = { ...sensor.data, ...newData };
-      sensor.lastUpdated = new Date();
-      await sensor.save();
-
-      console.log(`🔄 Updating mock data for sensor: ${sensor.sensorId}, type: ${sensor.type}`);
-      
-      // ✅ אם זה חיישן GPS - עדכן גם את `Location`
-      if (sensor.type === "gps") {
-          let location = await Location.findOne({ userId: sensor.userId });
-          
-          if (!location) {
-              console.log(`🆕 Creating new location entry for user ${sensor.userId}`);
-              location = new Location({
-                  userId: sensor.userId,
-                  currentLocation: { latitude: newData.latitude, longitude: newData.longitude }
-              });
-          } else {
-              console.log(`🛠 Updating existing location for user ${sensor.userId}, New Location: ${newData.latitude}, ${newData.longitude}`);
-              location.currentLocation = { latitude: newData.latitude, longitude: newData.longitude };
-          }
-          await location.save();
-      }
-
-      await new SensorHistory({
-          userId: sensor.userId,
-          sensorId: sensor.sensorId,
-          type: sensor.type,
-          data: sensor.data
-      }).save();
-  }
-
-  console.log(`✅ Mock sensor data updated for user: ${userId}`);
-};
-const generateRandomData = (sensorType) => {
-  switch (sensorType) {
-      case "temperature":
-          return { temperature: (Math.random() * 40 + 10).toFixed(1) }; // 10°C - 50°C
-      case "gps":
-          return {
-              latitude: (32.015 + Math.random() * 0.01).toFixed(6), // שינויים קטנים
-              longitude: (34.752 + Math.random() * 0.01).toFixed(6),
-          };
-      case "battery":
-          return { batteryLevel: Math.floor(Math.random() * 100) }; // 0% - 100%
-      case "humidity":
-          return { humidity: (Math.random() * 50 + 30).toFixed(1) }; // 30% - 80%
-      default:
-          return {};
-  }
-};
-// ✅ פונקציה לריצת עדכון חיישנים עבור משתמש ספציפי לפי `userId`
-exports.triggerMockUpdateForUser = async (req, res) => {
-  const { userId } = req.body;
-
-  if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-  }
-
-  try {
-      await updateMockSensorsForUser(userId);
-      res.status(200).json({ message: "Mock sensor data updated successfully!" });
-  } catch (error) {
-      console.error("Error updating mock sensor data:", error);
-      res.status(500).json({ error: error.message });
-  }
-};
-// ✅ שליפת היסטוריית חיישן
+// ✅ שליפת היסטוריית נתוני סנסור
 exports.getSensorHistory = async (req, res) => {
     const { userId, sensorId, startDate, endDate } = req.query;
 
@@ -326,3 +279,43 @@ exports.getSensorHistory = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.deleteAllSensorHistoryForUser = async (req, res) => {
+    const { userId } = req.params;
+  
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+  
+    try {
+      const result = await SensorHistory.deleteMany({ userId });
+  
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: 'No sensor history found to delete' });
+      }
+  
+      res.status(200).json({ message: `Deleted ${result.deletedCount} sensor history records for user` });
+    } catch (error) {
+      console.error("Error deleting all sensor history:", error);
+      res.status(500).json({ error: error.message });
+    }
+  };
+  exports.deleteSensorHistoryById = async (req, res) => {
+    const { historyId } = req.params;
+  
+    if (!historyId) {
+      return res.status(400).json({ message: 'History ID is required' });
+    }
+  
+    try {
+      const result = await SensorHistory.findByIdAndDelete(historyId);
+  
+      if (!result) {
+        return res.status(404).json({ message: 'Sensor history entry not found' });
+      }
+  
+      res.status(200).json({ message: 'Sensor history entry deleted successfully', deletedEntry: result });
+    } catch (error) {
+      console.error("Error deleting sensor history by ID:", error);
+      res.status(500).json({ error: error.message });
+    }
+  };

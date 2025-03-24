@@ -7,7 +7,8 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, required: false},
   name: { type: String, required: false },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: false },  
+  password: { type: String, required: false },
+  isVerified: { type: Boolean, default: false },  
   verificationCode: { type: String, required: false },  
   failedLoginAttempts: { type: Number, default: 0 },
   accountLocked: { type: Boolean, default: false },
@@ -16,6 +17,12 @@ const userSchema = new mongoose.Schema({
     enum: ['safe-zone', 'battery', 'temperature', 'theft', 'sensor-failure'],
     default: ['safe-zone', 'battery'], // ברירת מחדל
   },
+  deviceTokens: {
+    type: [String],
+    default: []
+  },
+  batteryCompany: { type: String },  
+  batteryType: { type: String }       
 });
 
 const User = mongoose.model('User', userSchema);

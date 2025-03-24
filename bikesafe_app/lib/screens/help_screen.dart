@@ -41,7 +41,7 @@ class HelpScreen extends StatelessWidget {
             title: "Monitor Your Battery",
             description:
                 "Track your bike's battery status and receive alerts.",
-            imagePath: "assets/battery_status.png",
+            imagePath: "assets/battery.png",
           ),
           _buildHelpSection(
             title: "Manage Alerts",

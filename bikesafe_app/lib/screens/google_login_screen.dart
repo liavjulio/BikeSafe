@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../utils/constants.dart'; // Adjust path as needed
+
+final String apiBaseUrl = Constants.envBaseUrl;
 
 class GoogleLoginScreen extends StatefulWidget {
   @override
@@ -17,16 +21,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
   
   TextEditingController _passwordController = TextEditingController();
 
-  // Function to determine the correct API base URL for different platforms
-  String getApiBaseUrl() {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5001'; // Android Emulator
-    } else if (Platform.isIOS) {
-      return 'http://localhost:5001'; // iOS Simulator
-    } else {
-      return 'http://192.168.X.X:5001'; // Replace X.X with your local IP for physical devices
-    }
-  }
 
   // Google Sign-In Function
   Future<void> _loginWithGoogle() async {
@@ -49,9 +43,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
         print("Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
 
-        // Get the correct API base URL
-        String apiBaseUrl = getApiBaseUrl();
-        print("Using API base URL: $apiBaseUrl");
+       
 
         // Now send the ID token to the backend for authentication
         final response = await http.post(
@@ -125,8 +117,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                 final password = _passwordController.text.trim();
                 print("User entered password: $password");
 
-                // Send password to the backend
-                String apiBaseUrl = getApiBaseUrl();
                 final setPasswordResponse = await http.post(
                   Uri.parse('$apiBaseUrl/auth/google/callback'),
                   headers: <String, String>{

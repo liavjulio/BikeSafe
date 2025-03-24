@@ -9,7 +9,8 @@ router.post('/create', authMiddleware, sensorController.createSensor);
 router.post('/update', authMiddleware, sensorController.updateSensorData);  
 router.get('/alldata', authMiddleware, sensorController.getAllSensorsForUser);
 router.delete('/delete/:sensorId', authMiddleware, sensorController.deleteSensor);
-router.post('/update-mock', authMiddleware, sensorController.triggerMockUpdateForUser);
 router.get('/history', authMiddleware, sensorController.getSensorHistory);
+router.delete('/history/user/:userId', authMiddleware,sensorController.deleteAllSensorHistoryForUser);
+router.delete('/history/:historyId', authMiddleware,sensorController.deleteSensorHistoryById);
 
 module.exports = router;

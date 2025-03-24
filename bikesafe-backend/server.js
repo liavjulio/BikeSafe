@@ -84,7 +84,7 @@ app.use('/api/location', locationRoutes);
 app.use('/api/sensor', sensorRoutes);
 app.use('/api/alerts', alertRoutes);
 // Google callback route after successful Google login
-app.post('/auth/google/callback', async (req, res) => {
+app.post('/api/auth/google/callback', async (req, res) => {
   const { idToken, password } = req.body;
   const CLIENT_IDS = [
     process.env.GOOGLE_CLIENT_ID_WEB,

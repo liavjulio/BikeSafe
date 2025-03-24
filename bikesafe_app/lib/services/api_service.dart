@@ -1,12 +1,13 @@
 //bikesafe_app/lib/services/api_service.dart
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../utils/constants.dart'; // Adjust path as needed
+
+final String _baseUrl = Constants.envBaseUrl;
 
 class ApiService {
-static final String _baseUrl = Platform.isAndroid
-      ? 'http://10.0.2.2:5001/api'  // Android Emulator
-      : 'http://localhost:5001/api'; // iOS Simulator & Web
   static Future<Map<String, dynamic>> login(String email, String password) async {
   final response = await http.post(
     Uri.parse('$_baseUrl/auth/login'),
@@ -67,7 +68,7 @@ static Future<Map<String, bool>> fetchAlertPreferences(String userId, String tok
 }
 static Future<bool> submitFeedback(String userId, String feedback, String token) async {
   final response = await http.post(
-    Uri.parse('$_baseUrl/api/auth/feedback'),
+    Uri.parse('$_baseUrl/auth/feedback'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token', // Pass the token here
@@ -83,18 +84,22 @@ static Future<bool> submitFeedback(String userId, String feedback, String token)
   }
 }
 static Future<Map<String, dynamic>> verifyCode(String code) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/auth/verify-code'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'code': code}),
-      );
-
-      return jsonDecode(response.body);
-    } catch (e) {
-      throw Exception('Failed to verify code');
+  try {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/auth/verify-code'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'code': code.trim()}),
+    );
+    print("Verify code response status: ${response.statusCode}");
+    print("Verify code response body: ${response.body}");
+    if (response.statusCode != 200) {
+      throw Exception("Failed to verify code: ${response.body}");
     }
+    return jsonDecode(response.body);
+  } catch (e) {
+    throw Exception('Failed to verify code: ${e.toString()}');
   }
+}
   static Future<Map<String, dynamic>> register(String email, String phone, String password) async {
   final response = await http.post(
     Uri.parse('$_baseUrl/auth/register'),
@@ -144,6 +149,35 @@ static Future<List<Map<String, dynamic>>> fetchSensorHistory(String userId, Stri
     return List<Map<String, dynamic>>.from(jsonDecode(response.body));
   } else {
     throw Exception('Failed to load sensor history');
+  }
+}
+static Future<void> deleteSensorHistoryById(String historyId, String token) async {
+  final response = await http.delete(
+    Uri.parse('$_baseUrl/sensor/history/$historyId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+  print('Delete response status: ${response.statusCode}');
+  print('Delete response body: ${response.body}');
+  if (response.statusCode != 200) {
+    throw Exception('Failed to delete sensor history entry');
+  }
+}
+
+static Future<void> deleteAllSensorHistoryForUser(String userId, String token) async {
+  final response = await http.delete(
+    Uri.parse('$_baseUrl/sensor/history/user/$userId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+  print('Delete response status: ${response.statusCode}');
+  print('Delete response body: ${response.body}');
+  if (response.statusCode != 200) {
+    throw Exception('Failed to delete all sensor history');
   }
 }
 }

@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const sensorSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   sensorId: { type: String, required: true, unique: true }, 
-  type: { type: String, enum: ['temperature', 'gps', 'battery', 'humidity'], required: true },
   data: {
     temperature: { type: Number },
     latitude: { type: Number },
@@ -12,7 +11,9 @@ const sensorSchema = new mongoose.Schema({
     batteryLevel: { type: Number },
     humidity: { type: Number }
   },
-  lastUpdated: { type: Date, default: Date.now }
+  lastUpdated: { type: Date, default: Date.now },
+  lastSavedToHistory: { type: Date, default: null } // ✅ ADD THIS
+
 });
 
 const Sensor = mongoose.model('Sensor', sensorSchema);

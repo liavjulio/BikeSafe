@@ -12,6 +12,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+
     }
 
     kotlinOptions {
@@ -39,6 +41,8 @@ flutter {
 
 dependencies {
     implementation 'com.google.android.gms:play-services-auth:21.1.1' // Google Sign-In
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
+
 }
 
 // ✅ Load API Key from local.properties

@@ -103,15 +103,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Register')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: Text('Register')),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            if (!_isVerificationStep) ...[
+              // Registration form fields
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(labelText: 'Email'),
@@ -168,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              // Add a button to show the sensor instructions
+              // Button to show sensor instructions
               ElevatedButton(
                 onPressed: _showSensorInstructions,
                 child: Text('How to Connect to the Sensor'),
@@ -186,10 +188,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _register,
                   child: Text('Register'),
                 ),
+            ] else ...[
+              // Verification UI when _isVerificationStep is true
+              Text(
+                "A verification code was sent to your email. Please enter it below:",
+                textAlign: TextAlign.center,
+              ),
+              TextFormField(
+                controller: _verificationCodeController,
+                decoration: InputDecoration(labelText: 'Verification Code'),
+              ),
+              const SizedBox(height: 20),
+              if (_errorMessage != null)
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(color: Colors.red),
+                ),
+              if (_isLoading)
+                const CircularProgressIndicator()
+              else
+                ElevatedButton(
+                  onPressed: _verifyCode,
+                  child: Text('Verify Code'),
+                ),
             ],
-          ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

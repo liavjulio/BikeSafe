@@ -48,7 +48,9 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Account not verified. Please verify your email.' });
+    }
     // Check if the account is locked
     if (user.accountLocked) {
       return res.status(403).json({ message: 'Account is locked' });
@@ -119,6 +121,7 @@ exports.verifyCode = async (req, res) => {
 
     // Clear the verification code once it has been used
     user.verificationCode = null;
+    user.isVerified = true;
     await user.save();
 
     res.status(200).json({ status: 'success', message: 'Code verified successfully' });
@@ -146,7 +149,13 @@ exports.getUserProfile = async (req, res) => {
 exports.updateUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone } = req.body;
+    const { name, phone, batteryCompany, batteryType } = req.body;
+
+    const updateFields = {};
+    if (name !== undefined) updateFields.name = name;
+    if (phone !== undefined) updateFields.phone = phone;
+    if (batteryCompany !== undefined) updateFields.batteryCompany = batteryCompany;
+    if (batteryType !== undefined) updateFields.batteryType = batteryType;
 
     const user = await User.findByIdAndUpdate(userId, { name, phone }, { new: true }).select('-password');
 

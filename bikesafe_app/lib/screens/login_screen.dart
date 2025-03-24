@@ -10,6 +10,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _verificationCodeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _errorMessage;
   bool _isLoading = false;
@@ -36,20 +37,26 @@ class _LoginScreenState extends State<LoginScreen> {
         // Check if userId or token is null
         if (userId == null || token == null) {
           print('Invalid response: Missing userId or token'); // Debugging print
-          throw Exception('Invalid response from server: Missing userId or token');
+          throw Exception(
+              'Invalid response from server: Missing userId or token');
         }
 
-        print('Login successful. Navigating to Main Screen with userId: $userId');
+        print(
+            'Login successful. Navigating to Main Screen with userId: $userId');
         Navigator.pushNamed(
           context,
           '/main',
-          arguments: {'userId': userId,'token': token},
+          arguments: {'userId': userId, 'token': token},
         );
       } catch (e) {
-        print('Login failed: $e'); // Debugging print
-        setState(() {
-          _errorMessage = e.toString();
-        });
+        // Check if the error is about not being verified
+        if (e.toString().contains('Account not verified')) {
+          _showVerificationDialog();
+        } else {
+          setState(() {
+            _errorMessage = e.toString();
+          });
+        }
       } finally {
         setState(() {
           _isLoading = false;
@@ -68,7 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
       print('Invalid email address entered'); // Debugging print
       setState(() {
-        _errorMessage = 'Please enter a valid email address to reset your password.';
+        _errorMessage =
+            'Please enter a valid email address to reset your password.';
       });
       return;
     }
@@ -99,6 +107,66 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       print('Forgot Password request completed'); // Debugging print
     }
+  }
+
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Force user to interact with the dialog
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Email Verification'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                  'Your account is not verified. Please enter the verification code sent to your email:'),
+              TextField(
+                controller: _verificationCodeController,
+                decoration: InputDecoration(labelText: 'Verification Code'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Optionally allow cancel
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                print("Verifying code: ${_verificationCodeController.text}");
+                try {
+                  final verifyResponse = await ApiService.verifyCode(
+                    _verificationCodeController.text,
+                  );
+                  print("Verification response: $verifyResponse");
+                  if (verifyResponse['status'] == 'success') {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Verification successful! Please login again.')),
+                    );
+                  } else {
+                    setState(() {
+                      _errorMessage = 'Verification failed. Please try again.';
+                    });
+                  }
+                } catch (error) {
+                  setState(() {
+                    _errorMessage = error.toString();
+                  });
+                  print("Error during verification: $error");
+                }
+              },
+              child: Text('Verify'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

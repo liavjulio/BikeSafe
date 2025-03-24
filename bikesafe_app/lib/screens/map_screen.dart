@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
 
-final String _baseUrl = Platform.isAndroid
-    ? 'http://10.0.2.2:5001/api'
-    : 'http://localhost:5001/api';
+import '../utils/constants.dart'; // Adjust path as needed
+
+final String _baseUrl = Constants.envBaseUrl;
 
 class MapScreen extends StatefulWidget {
   final String userId;
@@ -30,19 +31,31 @@ class _MapScreenState extends State<MapScreen> {
 
   // Safe Zone variables
   LatLng? _safeZoneCenter;
-  double _safeZoneRadius = 500; // Default: 500 meters
+  double _safeZoneRadius = 20; 
   void _startLocationMonitor() {
-  Timer.periodic(Duration(seconds: 10), (timer) {
-    _fetchBikeLocation();
-  });
-}
+    Timer.periodic(Duration(seconds: 10), (timer) {
+      _fetchBikeLocation();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadCustomMarker(); // Load your marker here!
     _fetchBikeLocation();
     _fetchSafeZone();
     _trackLocation();
     _startLocationMonitor();
+  }
+
+  BitmapDescriptor? customIcon;
+
+  Future<void> _loadCustomMarker() async {
+    customIcon = await BitmapDescriptor.asset(
+      const ImageConfiguration(size: Size(48, 48)),
+      'assets/bike_marker.png', // Make sure this path is correct
+    );
+    setState(() {}); // Refresh UI after loading
   }
 
   /// Fetch bike's real-time location from backend
@@ -116,62 +129,62 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-void _setSafeZone() async {
-  if (_bikeLocation == null) {
-    print("🚨 _setSafeZone() called, but _bikeLocation is null!");
-    return;
-  }
-
-  print("✅ _setSafeZone() called, bike location = $_bikeLocation");
-
-  setState(() {
-    _safeZoneCenter = _bikeLocation;
-    _safeZoneRadius = 500;
-  });
-
-  print("📡 Sending safe zone to server...");
-  
-  final url = '$_baseUrl/location/safe-zone';
-
-  try {
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'userId': widget.userId,
-        'latitude': _safeZoneCenter?.latitude,
-        'longitude': _safeZoneCenter?.longitude,
-        'radius': _safeZoneRadius,
-      }),
-    );
-
-    print("🔄 Response status: ${response.statusCode}");
-    print("📩 Response body: ${response.body}");
-
-    if (response.statusCode == 200) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Safe Zone Set"),
-          content: Text("Your safe zone has been set successfully!"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("OK"),
-            ),
-          ],
-        ),
-      );
-    } else {
-      print("❌ Failed to save safe zone: ${response.statusCode}");
+  void _setSafeZone() async {
+    if (_bikeLocation == null) {
+      print("🚨 _setSafeZone() called, but _bikeLocation is null!");
+      return;
     }
-  } catch (error) {
-    print("❌ Error saving safe zone: $error");
+
+    print("✅ _setSafeZone() called, bike location = $_bikeLocation");
+
+    setState(() {
+      _safeZoneCenter = _bikeLocation;
+      _safeZoneRadius = 500;
+    });
+
+    print("📡 Sending safe zone to server...");
+
+    final url = '$_baseUrl/location/safe-zone';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'userId': widget.userId,
+          'latitude': _safeZoneCenter?.latitude,
+          'longitude': _safeZoneCenter?.longitude,
+          'radius': _safeZoneRadius,
+        }),
+      );
+
+      print("🔄 Response status: ${response.statusCode}");
+      print("📩 Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Safe Zone Set"),
+            content: Text("Your safe zone has been set successfully!"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        print("❌ Failed to save safe zone: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("❌ Error saving safe zone: $error");
+    }
   }
-}
 
   /// Fetch Safe Zone from backend if already set
   Future<void> _fetchSafeZone() async {
@@ -199,14 +212,16 @@ void _setSafeZone() async {
 
       print("Fetched safe zone lat=$lat, lng=$lng, rad=$rad");
     } else {
-      print("No safe zone data found or error fetching. Code: ${response.statusCode}");
+      print(
+          "No safe zone data found or error fetching. Code: ${response.statusCode}");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Bike Location'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+          title: Text('Bike Location'), automaticallyImplyLeading: false),
       body: Stack(
         children: [
           GoogleMap(
@@ -220,9 +235,11 @@ void _setSafeZone() async {
             markers: _bikeLocation != null
                 ? {
                     Marker(
-                      markerId: MarkerId('bikeLocation'),
+                      markerId: const MarkerId('bikeLocation'),
                       position: _bikeLocation!,
-                      infoWindow: InfoWindow(title: 'Your Bike'),
+                      icon: customIcon ??
+                          BitmapDescriptor.defaultMarker, // fallback
+                      infoWindow: const InfoWindow(title: 'Your Bike'),
                     ),
                   }
                 : {},

@@ -3,6 +3,11 @@ import 'dart:io'; // ✅ Import Platform
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
+import '../utils/constants.dart'; // Adjust path as needed
+
+final String _apiBaseUrl = Constants.envBaseUrl;
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
@@ -17,33 +22,32 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   Map<String, dynamic>? userData;
   bool _isLoading = true;
+  TextEditingController _batteryCompanyController = TextEditingController();
+  TextEditingController _batteryTypeController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
   TextEditingController _phoneController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
   TextEditingController _confirmPasswordController = TextEditingController();
 
-  // ✅ Detect Platform and Set API Base URL
-  late String _apiBaseUrl;
-
   @override
   void initState() {
     super.initState();
-
-    // Detect platform (Android uses 10.0.2.2, iOS uses localhost)
-    _apiBaseUrl = Platform.isAndroid ? 'http://10.0.2.2:5001' : 'http://localhost:5001';
 
     _fetchUserProfile();
   }
 
   Future<void> _fetchUserProfile() async {
     final response = await http.get(
-      Uri.parse('$_apiBaseUrl/api/auth/user/${widget.userId}'), // ✅ Dynamic Base URL
+      Uri.parse(
+          '$_apiBaseUrl/auth/user/${widget.userId}'), // ✅ Dynamic Base URL
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 
     if (response.statusCode == 200) {
       setState(() {
         userData = jsonDecode(response.body);
+        _batteryCompanyController.text = userData?['batteryCompany'] ?? '';
+        _batteryTypeController.text = userData?['batteryType'] ?? '';
         _nameController.text = userData?['name'] ?? '';
         _phoneController.text = userData?['phone'] ?? '';
         _isLoading = false;
@@ -55,9 +59,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _updateProfile() async {
     final response = await http.put(
-      Uri.parse('$_apiBaseUrl/api/auth/user/${widget.userId}'), // ✅ Dynamic Base URL
-      headers: {'Authorization': 'Bearer ${widget.token}', 'Content-Type': 'application/json'},
-      body: jsonEncode({'name': _nameController.text, 'phone': _phoneController.text}),
+      Uri.parse(
+          '$_apiBaseUrl/auth/user/${widget.userId}'), // ✅ Dynamic Base URL
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode({
+        'name': _nameController.text,
+        'phone': _phoneController.text,
+        'batteryCompany': _batteryCompanyController.text,
+        'batteryType': _batteryTypeController.text,
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -77,8 +90,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
 
     final response = await http.put(
-      Uri.parse('$_apiBaseUrl/api/auth/user/change-password/${widget.userId}'), // Add your endpoint for password change
-      headers: {'Authorization': 'Bearer ${widget.token}', 'Content-Type': 'application/json'},
+      Uri.parse(
+          '$_apiBaseUrl/auth/user/change-password/${widget.userId}'), // Add your endpoint for password change
+      headers: {
+        'Authorization': 'Bearer ${widget.token}',
+        'Content-Type': 'application/json'
+      },
       body: jsonEncode({'password': _passwordController.text}),
     );
 
@@ -93,7 +110,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> _deleteAccount() async {
     final response = await http.delete(
-      Uri.parse('$_apiBaseUrl/api/auth/delete-account/${widget.userId}'), // ✅ Dynamic Base URL
+      Uri.parse(
+          '$_apiBaseUrl/auth/delete-account/${widget.userId}'), // ✅ Dynamic Base URL
       headers: {'Authorization': 'Bearer ${widget.token}'},
     );
 
@@ -110,7 +128,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Delete Account"),
-        content: Text("Are you sure you want to delete your account? This action is irreversible."),
+        content: Text(
+            "Are you sure you want to delete your account? This action is irreversible."),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -149,7 +168,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage("assets/profile.png"), // Change to actual profile image
+                    backgroundImage: AssetImage(
+                        "assets/profile.png"), // Change to actual profile image
                   ),
                   SizedBox(height: 20),
                   TextField(
@@ -160,6 +180,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   TextField(
                     controller: _phoneController,
                     decoration: InputDecoration(labelText: "Phone"),
+                  ),
+                  SizedBox(height: 20),
+                  TextField(
+                    controller: _batteryCompanyController,
+                    decoration: InputDecoration(labelText: "Battery Company"),
+                  ),
+                  SizedBox(height: 10),
+                  TextField(
+                    controller: _batteryTypeController,
+                    decoration: InputDecoration(labelText: "Battery Type"),
                   ),
                   SizedBox(height: 20),
                   // **NEW: Password Change Section**
@@ -184,18 +214,21 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   // **NEW: Alerts Settings Button**
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/alerts-settings', arguments: {
-                        'userId': widget.userId,
-                        'token': widget.token
-                      });
+                      Navigator.pushNamed(context, '/alerts-settings',
+                          arguments: {
+                            'userId': widget.userId,
+                            'token': widget.token
+                          });
                     },
                     icon: Icon(Icons.notifications_active),
                     label: Text("Manage Alerts"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                   SizedBox(height: 20),
@@ -215,8 +248,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ],
