@@ -23,6 +23,7 @@ jobs:
       # 3. Install frontend dependencies
       - name: Install Flutter dependencies
         run: flutter pub get
+        working-directory: bikesafe_app
 
       # # 4. Run frontend tests (if you have them)
       # - name: Run Flutter tests
