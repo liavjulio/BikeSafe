@@ -68,7 +68,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/.env
+    # - assets/.env
     - assets/logo.png
     - assets/google_logo.png
     - assets/bike_marker.png
