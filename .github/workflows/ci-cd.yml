@@ -19,7 +19,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.10.5'  # Adjust to your desired version
+          flutter-version: '3.27.1'  # Adjust to your desired version
 
       # 3. Install frontend dependencies
       - name: Install Flutter dependencies
