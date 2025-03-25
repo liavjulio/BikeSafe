@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up Flutter for the frontend build
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.7.7'  # Adjust to your desired version
+
+      # 3. Install frontend dependencies
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      # # 4. Run frontend tests (if you have them)
+      # - name: Run Flutter tests
+      #   run: flutter test
+
+      # 5. Build the release APK for the frontend
+      - name: Build Flutter APK (Release)
+        run: flutter build apk --release
+
+      # 6. Upload the APK as an artifact for later download/distribution
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      # 7. Build the backend Docker image
+      - name: Build Docker image for backend
+        working-directory: ./bikesafe-backend  # Adjust if your backend folder is named differently
+        run: |
+          docker build -t bikesafe-backend:latest .
+
+      # # 8. (Optional) Run backend tests inside the Docker container
+      # # Adjust this command based on your test script. For example, if using npm:
+      # - name: Run backend tests
+      #   working-directory: ./bikesafe-backend
+      #   run: |
+      #     docker run --rm bikesafe-backend:latest npm test
+
+      # # 9. (Optional) Push the Docker image to a container registry if deploying the backend.
+      # # Make sure to store your Docker Hub (or other registry) credentials in GitHub Secrets.
+      # - name: Push Docker image to Docker Hub
+      #   if: github.ref == 'refs/heads/main'
+      #   working-directory: ./bikesafe-backend
+      #   env:
+      #     DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      #     DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      #   run: |
+      #     docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_ACCESS_TOKEN
+      #     docker tag bikesafe-backend:latest $DOCKER_HUB_USERNAME/bikesafe-backend:latest
+      #     docker push $DOCKER_HUB_USERNAME/bikesafe-backend:latest
