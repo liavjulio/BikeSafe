@@ -33,6 +33,7 @@ jobs:
       # 5. Build the release APK for the frontend
       - name: Build Flutter APK (Release)
         run: flutter build apk --release
+        working-directory: bikesafe_app
 
       # 6. Upload the APK as an artifact for later download/distribution
       - name: Upload APK artifact
