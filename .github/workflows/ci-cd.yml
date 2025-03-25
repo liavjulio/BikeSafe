@@ -34,7 +34,7 @@ jobs:
 
       # 6. Upload the APK as an artifact for later download/distribution
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-apk
           path: build/app/outputs/flutter-apk/app-release.apk
