@@ -10,15 +10,16 @@ admin.initializeApp({
 // ✅ Send notification
 async function sendFCMNotification(deviceTokens, payload) {
   try {
-    const response = await admin.messaging().sendMulticast({
-      tokens: deviceTokens,
+    const message = {
+      token: deviceTokens[0], // במקרה של מכשיר בודד, או לולאה על כל הטוקנים
       notification: {
         title: payload.title,
-        body: payload.body
+        body: payload.body,
       },
       data: payload.data || {}
-    });
-
+    };
+    
+    const response = await admin.messaging().send(message);
     console.log('Successfully sent message:', response);
   } catch (error) {
     console.log('Error sending message:', error);
@@ -115,25 +116,36 @@ exports.sendAlert= async (userId, type, message) => {
     console.error('Error sending alert notification:', error);
   }
 };
-  exports.saveDeviceToken = async (req, res) => {
-    const { userId, token } = req.body;
-  
-    try {
-      const user = await User.findById(userId);
-  
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      if (!user.deviceTokens.includes(token)) {
-        user.deviceTokens.push(token);
-        await user.save();
-        console.log(`✅ Token saved for user: ${userId}`);
-      }
-  
-      res.status(200).json({ message: 'Device token saved successfully' });
-    } catch (error) {
-      console.error('❌ Error saving device token:', error);
-      res.status(500).json({ error: error.message });
+exports.saveDeviceToken = async (req, res) => {
+  // Log the incoming request body
+  console.log("Received request body:", req.body);
+
+  const { userId, token } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      console.error("User not found for ID:", userId);
+      return res.status(404).json({ message: 'User not found' });
     }
-  };
+
+    // Log the current tokens for the user
+    console.log("User's current device tokens:", user.deviceTokens);
+
+    if (!user.deviceTokens.includes(token)) {
+      user.deviceTokens.push(token);
+      await user.save();
+      console.log(`✅ Token saved for user: ${userId}`);
+    } else {
+      console.log(`Token already exists for user: ${userId}`);
+    }
+
+    // Log the updated tokens for verification
+    console.log("User's updated device tokens:", user.deviceTokens);
+    res.status(200).json({ message: 'Device token saved successfully', tokens: user.deviceTokens });
+  } catch (error) {
+    console.error('❌ Error saving device token:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

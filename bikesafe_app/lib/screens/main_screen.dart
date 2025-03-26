@@ -67,9 +67,11 @@ class _MainScreenState extends State<MainScreen> {
       _notificationService.initializeFCM(
         userId: widget.userId,
         jwtToken: widget.token,
+        baseUrl: _baseUrl,
         context: context,
         onTokenRefresh: (newToken) {
-          registerDeviceToken(widget.userId, widget.token);
+          debugPrint(
+              '🔄 Token refresh callback triggered with new token: $newToken');
         },
       );
     } catch (e) {
@@ -87,38 +89,6 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _initializeBluetooth() async {
     await _requestBluetoothPermissions();
     await _startBluetoothScan();
-  }
-
-  Future<void> registerDeviceToken(String userId, String jwtToken) async {
-    try {
-      String? fcmToken = await FirebaseMessaging.instance.getToken();
-
-      if (fcmToken != null) {
-        debugPrint('✅ Retrieved FCM Token: $fcmToken');
-
-        final response = await http.post(
-          Uri.parse('$_baseUrl/api/alerts/save-token'),
-          headers: {
-            'Authorization': 'Bearer $jwtToken',
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'userId': userId,
-            'token': fcmToken,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          debugPrint('✅ FCM token registered successfully!');
-        } else {
-          debugPrint('❌ Failed to register FCM token: ${response.body}');
-        }
-      } else {
-        debugPrint('❌ Failed to retrieve FCM token!');
-      }
-    } catch (e) {
-      debugPrint('❌ Error registering FCM token: $e');
-    }
   }
 
   Future<void> _requestBluetoothPermissions() async {

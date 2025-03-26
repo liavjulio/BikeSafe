@@ -60,7 +60,7 @@ jobs:
 
       # 6. Build the release APK
       - name: Build Flutter APK (Release)
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=PRODUCTION=true
         working-directory: bikesafe_app
 
       # 7. Upload the APK artifact
