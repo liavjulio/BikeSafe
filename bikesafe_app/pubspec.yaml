@@ -48,6 +48,7 @@ dependency_overrides:
     git:
       url: https://github.com/liavjulio/flutter_local_notifications.git
       ref: master   # or the branch where you applied your fix  
+      path: flutter_local_notifications
 
 
   # The following adds the Cupertino Icons font to your application.
