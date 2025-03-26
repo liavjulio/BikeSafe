@@ -30,11 +30,12 @@ jobs:
       # - name: Run Flutter tests
       #   run: flutter test
       - name: Create .env file
+        working-directory: bikesafe_app
         run: 
           cat << 'EOF' > assets/.env
           ${{ secrets.ENV_FILE }}
           EOF
-        working-directory: bikesafe_app
+        
         
       - name: Debug .env content
         run: |
