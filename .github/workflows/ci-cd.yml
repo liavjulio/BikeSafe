@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'bikesafe_app/**'
+      - '.github/workflows/ci-cd.yml'
   pull_request:
     branches: [main]
     paths:
       - 'bikesafe_app/**'
+      - '.github/workflows/ci-cd.yml'
 
 jobs:
   build-and-test:
