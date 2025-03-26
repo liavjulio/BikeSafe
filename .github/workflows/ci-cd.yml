@@ -32,11 +32,21 @@ jobs:
       - name: Create .env file
         run: echo "${{ secrets.ENV_FILE }}" > assets/.env
         working-directory: bikesafe_app
+      - name: Debug google-services.json content
+        run: |
+          echo "== Contents of google-services.json =="
+          # Option 1: Output the whole file (be careful!)
+          cat assets/.env  
 
       - name: Create google-services.json
         run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
         working-directory: bikesafe_app
-            
+      - name: Debug google-services.json content
+        run: |
+          echo "== Contents of google-services.json =="
+          # Option 1: Output the whole file (be careful!)
+          cat android/app/google-services.json  
+
       # 5. Build the release APK for the frontend
       - name: Build Flutter APK (Release)
         run: flutter build apk --release
