@@ -45,7 +45,8 @@ jobs:
         run: |
           echo "== Contents of google-services.json =="
           # Option 1: Output the whole file (be careful!)
-          cat android/app/google-services.json  
+          cat android/app/google-services.json
+        working-directory: bikesafe_app    
 
       # 5. Build the release APK for the frontend
       - name: Build Flutter APK (Release)
