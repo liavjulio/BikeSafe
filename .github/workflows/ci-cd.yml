@@ -30,8 +30,12 @@ jobs:
       # - name: Run Flutter tests
       #   run: flutter test
       - name: Create .env file
-        run: echo "${{ secrets.ENV_FILE }}" > assets/.env
+        run: 
+          cat << 'EOF' > assets/.env
+          ${{ secrets.ENV_FILE }}
+          EOF
         working-directory: bikesafe_app
+        
       - name: Debug .env content
         run: |
           echo "== Contents of .env =="
@@ -39,7 +43,10 @@ jobs:
           cat bikesafe_app/assets/.env  
 
       - name: Create google-services.json
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
+        run: |
+          cat << 'EOF' > android/app/google-services.json
+          ${{ secrets.GOOGLE_SERVICES_JSON }}
+          EOF
         working-directory: bikesafe_app
       - name: Debug google-services.json content
         run: |
