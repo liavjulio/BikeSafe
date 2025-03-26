@@ -13,8 +13,8 @@ on:
       - '.github/workflows/backend_ci-cd.yml'
 
 jobs:
-  build-and-test:
-    name: Build and Test Backend
+  build-test-and-push:
+    name: Build, Test, and Push Backend Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -36,32 +36,15 @@ jobs:
       - name: Create backend JSON file from secret
         working-directory: bikesafe-backend
         run: echo "${{ secrets.BIKE_SAFE }}" | base64 -d > bike-safe-24118-e2932191e023.json
-      
-      # Uncomment if you have tests configured
+
+      # Uncomment if tests are available
       # - name: Run Tests
       #   working-directory: bikesafe-backend
       #   run: npm test
 
-  docker-build:
-    name: Build Docker Image for Backend
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
       - name: Build Docker image
         working-directory: bikesafe-backend
         run: docker build -t bikesafe-backend:latest .
-
-  docker-push:
-    name: Push Docker Image to Docker Hub
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: docker-build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
       - name: Docker Hub Login
         uses: docker/login-action@v2
@@ -69,7 +52,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Push Docker image to Docker Hub
+      - name: Tag and Push Docker image
         run: |
           docker tag bikesafe-backend:latest ${{ secrets.DOCKER_HUB_USERNAME }}/bikesafe-backend:latest
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/bikesafe-backend:latest
