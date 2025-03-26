@@ -82,6 +82,6 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         run: |
-          docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_ACCESS_TOKEN
-          docker tag bikesafe-backend:latest $DOCKER_HUB_USERNAME/bikesafe-backend:latest
-          docker push $DOCKER_HUB_USERNAME/bikesafe-backend:latest
+          docker login -u ${{secrets.DOCKER_HUB_USERNAME}} -p ${{secrets.DOCKER_HUB_ACCESS_TOKEN}}
+          docker tag bikesafe-backend:latest ${{secrets.DOCKER_HUB_USERNAME}}/bikesafe-backend:latest
+          docker push ${{secrets.DOCKER_HUB_USERNAME}}/bikesafe-backend:latest
