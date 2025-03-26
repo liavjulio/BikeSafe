@@ -1,0 +1,77 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build and Test Backend
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up Node.js environment (adjust node-version as needed)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      # 3. Install backend dependencies
+      - name: Install Dependencies
+        working-directory: bikesafe-backend
+        run: npm install
+
+      - name: Create .env file from secret
+        run: echo "${{ secrets.BACKEND_ENV_FILE }}" | base64 -d > .env
+        working-directory: bikesafe-backend
+      
+      - name: Create backend JSON file from secret
+        run: echo "${{ secrets.BIKE_SAFE }}" | base64 -d > bike-safe-24118-e2932191e023.json
+        working-directory: bikesafe-backend      
+    #   # 4. Run backend tests (ensure you have a test script defined in package.json)
+    #   - name: Run Tests
+    #     working-directory: bikesafe-backend
+    #     run: npm test
+
+  docker-build:
+    name: Build Docker Image for Backend
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Build the Docker image
+      - name: Build Docker image
+        working-directory: bikesafe-backend
+        run: docker build -t bikesafe-backend:latest .
+
+  docker-push:
+    name: Push Docker Image to Docker Hub
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Log in to Docker Hub (make sure to add DOCKER_HUB_USERNAME and DOCKER_HUB_ACCESS_TOKEN to your repository secrets)
+      - name: Docker Hub Login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      # 3. Tag and push the Docker image
+      - name: Tag and Push Docker Image
+        working-directory: bikesafe-backend
+        run: |
+          docker tag bikesafe-backend:latest ${{ secrets.DOCKER_HUB_USERNAME }}/bikesafe-backend:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/bikesafe-backend:latest
