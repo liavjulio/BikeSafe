@@ -43,7 +43,11 @@ dependencies:
   firebase_messaging: ^14.7.16
   fl_chart: ^0.65.0
   flutter_local_notifications: 16.2.0
-  
+dependency_overrides:
+  flutter_local_notifications:
+    git:
+      url: https://github.com/liavjulio/flutter_local_notifications.git
+      ref: master   # or the branch where you applied your fix  
 
 
   # The following adds the Cupertino Icons font to your application.
