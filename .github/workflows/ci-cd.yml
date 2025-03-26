@@ -14,81 +14,55 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Set up Flutter for the frontend build
+      # 2. Set up Flutter
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.27.1'  # Adjust to your desired version
+          flutter-version: '3.27.1'
 
-      # 3. Install frontend dependencies
+      # 3. Install Flutter dependencies
       - name: Install Flutter dependencies
         run: flutter pub get
         working-directory: bikesafe_app
 
-      # # 4. Run frontend tests (if you have them)
-      # - name: Run Flutter tests
-      #   run: flutter test
+      # 4. Create .env file from secret
       - name: Create .env file
         working-directory: bikesafe_app
-        run: 
-          cat << 'EOF' > assets/.env
-          ${{ secrets.ENV_FILE }}
-          EOF
-        
-        
+        run: |
+          cat <<'EOF' > assets/.env
+${{ secrets.ENV_FILE }}
+EOF
+
+      # 5. Create google-services.json from secret
+      - name: Create google-services.json
+        working-directory: bikesafe_app
+        run: |
+          cat <<'EOF' > android/app/google-services.json
+${{ secrets.GOOGLE_SERVICES_JSON }}
+EOF
+
+      # (Optional) Debug print – use caution with secrets
       - name: Debug .env content
+        working-directory: bikesafe_app
         run: |
           echo "== Contents of .env =="
-          # Option 1: Output the whole file (be careful!)
-          cat bikesafe_app/assets/.env  
+          cat assets/.env
 
-      - name: Create google-services.json
-        run: |
-          cat << 'EOF' > android/app/google-services.json
-          ${{ secrets.GOOGLE_SERVICES_JSON }}
-          EOF
-        working-directory: bikesafe_app
       - name: Debug google-services.json content
+        working-directory: bikesafe_app
         run: |
           echo "== Contents of google-services.json =="
-          # Option 1: Output the whole file (be careful!)
-          cat bikesafe_app/android/app/google-services.json  
+          cat android/app/google-services.json
 
-      # 5. Build the release APK for the frontend
+      # 6. Build the release APK
       - name: Build Flutter APK (Release)
         run: flutter build apk --release
         working-directory: bikesafe_app
 
-      # 6. Upload the APK as an artifact for later download/distribution
+      # 7. Upload the APK artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-
-      # 7. Build the backend Docker image
-      - name: Build Docker image for backend
-        working-directory: ./bikesafe-backend  # Adjust if your backend folder is named differently
-        run: |
-          docker build -t bikesafe-backend:latest .
-
-      # # 8. (Optional) Run backend tests inside the Docker container
-      # # Adjust this command based on your test script. For example, if using npm:
-      # - name: Run backend tests
-      #   working-directory: ./bikesafe-backend
-      #   run: |
-      #     docker run --rm bikesafe-backend:latest npm test
-
-      # # 9. (Optional) Push the Docker image to a container registry if deploying the backend.
-      # # Make sure to store your Docker Hub (or other registry) credentials in GitHub Secrets.
-      # - name: Push Docker image to Docker Hub
-      #   if: github.ref == 'refs/heads/main'
-      #   working-directory: ./bikesafe-backend
-      #   env:
-      #     DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
-      #     DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-      #   run: |
-      #     docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_ACCESS_TOKEN
-      #     docker tag bikesafe-backend:latest $DOCKER_HUB_USERNAME/bikesafe-backend:latest
-      #     docker push $DOCKER_HUB_USERNAME/bikesafe-backend:latest
+          path: bikesafe_app/build/app/outputs/flutter-apk/app-release.apk
