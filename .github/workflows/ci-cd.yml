@@ -30,17 +30,14 @@ jobs:
       - name: Create .env file
         working-directory: bikesafe_app
         run: |
-          cat <<'EOF' > assets/.env
-${{ secrets.ENV_FILE }}
-EOF
+          echo "${{ secrets.ENV_FILE }}" | base64 -d > assets/.env
+
 
       # 5. Create google-services.json from secret
       - name: Create google-services.json
         working-directory: bikesafe_app
         run: |
-          cat <<'EOF' > android/app/google-services.json
-${{ secrets.GOOGLE_SERVICES_JSON }}
-EOF
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
 
       # (Optional) Debug print – use caution with secrets
       - name: Debug .env content
