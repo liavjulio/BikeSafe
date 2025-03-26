@@ -5,9 +5,9 @@ class Constants {
 
   static String get envBaseUrl {
     if (Platform.isAndroid || Platform.isIOS) {
-      return isProduction ? 'https://bikesafe-backend-latest.onrender.com/api' : 'http://192.168.1.244:5001/api';
+      return isProduction ? 'https://bikesafe-backend-latest.onrender.com/api' : 'https://bikesafe-backend-latest.onrender.com/api';
     } else {
-      return isProduction ? 'https://bikesafe-backend-latest.onrender.com/api' : 'http://localhost:5001/api';
+      return isProduction ? 'https://bikesafe-backend-latest.onrender.com/api' : 'https://bikesafe-backend-latest.onrender.com/api';
     }
   }
 }
