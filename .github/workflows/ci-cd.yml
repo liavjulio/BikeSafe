@@ -32,9 +32,9 @@ jobs:
       - name: Create .env file
         run: echo "${{ secrets.ENV_FILE }}" > assets/.env
         working-directory: bikesafe_app
-      - name: Debug google-services.json content
+      - name: Debug .env content
         run: |
-          echo "== Contents of google-services.json =="
+          echo "== Contents of .env =="
           # Option 1: Output the whole file (be careful!)
           cat assets/.env  
 
