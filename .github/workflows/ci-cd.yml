@@ -29,7 +29,8 @@ jobs:
       # # 4. Run frontend tests (if you have them)
       # - name: Run Flutter tests
       #   run: flutter test
-
+      - name: Create google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" > android/app/google-services.json    
       # 5. Build the release APK for the frontend
       - name: Build Flutter APK (Release)
         run: flutter build apk --release
