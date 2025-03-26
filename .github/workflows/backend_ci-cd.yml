@@ -3,8 +3,12 @@ name: Backend CI/CD
 on:
   push:
     branches: [main]
+    paths:
+      - 'bikesafe-backend/**'
   pull_request:
     branches: [main]
+    paths:
+      - 'bikesafe-backend/**'
 
 jobs:
   build-and-test:
@@ -69,9 +73,13 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      # 3. Tag and push the Docker image
-      - name: Tag and Push Docker Image
-        working-directory: bikesafe-backend
+      - name: Push Docker image to Docker Hub
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./bikesafe-backend
+        env:
+          DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         run: |
-          docker tag bikesafe-backend:latest ${{ secrets.DOCKER_HUB_USERNAME }}/bikesafe-backend:latest
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/bikesafe-backend:latest
+          docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_ACCESS_TOKEN
+          docker tag bikesafe-backend:latest $DOCKER_HUB_USERNAME/bikesafe-backend:latest
+          docker push $DOCKER_HUB_USERNAME/bikesafe-backend:latest
