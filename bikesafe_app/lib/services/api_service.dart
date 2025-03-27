@@ -101,11 +101,18 @@ static Future<Map<String, dynamic>> verifyCode(String code) async {
   }
 }
   static Future<Map<String, dynamic>> register(String email, String phone, String password) async {
+  // Log registration attempt (hiding password for security)
+  debugPrint("DEBUG: Attempting registration with email: $email, phone: $phone, password: [HIDDEN]");
+  
   final response = await http.post(
     Uri.parse('$_baseUrl/auth/register'),
     headers: {'Content-Type': 'application/json'},
     body: jsonEncode({'email': email, 'phone': phone, 'password': password}),
   );
+
+  // Log the response status and body
+  debugPrint("DEBUG: Registration response status: ${response.statusCode}");
+  debugPrint("DEBUG: Registration response body: ${response.body}");
 
   if (response.statusCode == 201) {
     return jsonDecode(response.body);
