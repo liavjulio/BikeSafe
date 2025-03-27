@@ -1,4 +1,3 @@
-//bikesafe_app/lib/screens/google_login_screen.dart
 import 'dart:io'; // For detecting platform
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -17,33 +16,42 @@ class GoogleLoginScreen extends StatefulWidget {
 }
 
 class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID'],);
+  // Check that the env variable is loaded
+  final String? googleWebClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
+  late final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: googleWebClientId,
+  );
   
   TextEditingController _passwordController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    debugPrint("DEBUG: GOOGLE_WEB_CLIENT_ID = $googleWebClientId");
+  }
 
   // Google Sign-In Function
   Future<void> _loginWithGoogle() async {
     try {
-      print("Attempting to sign in with Google...");
+      debugPrint("DEBUG: Attempting to sign in with Google...");
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      debugPrint("DEBUG: googleUser: $googleUser");
 
       if (googleUser != null) {
-        print("Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
+        debugPrint("DEBUG: Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
 
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        debugPrint("DEBUG: Received googleAuth: $googleAuth");
 
         final String? idToken = googleAuth.idToken;
         final String? accessToken = googleAuth.accessToken;
 
         if (idToken == null || accessToken == null) {
-          print("Error: Missing ID token or access token from Google.");
+          debugPrint("ERROR: Missing ID token or access token from Google.");
           throw Exception("Google authentication tokens are null.");
         }
 
-        print("Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
-
-       
+        debugPrint("DEBUG: Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
 
         // Now send the ID token to the backend for authentication
         final response = await http.post(
@@ -57,17 +65,18 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           }),
         );
 
-        print("Response from backend: ${response.statusCode}, Body: ${response.body}");
+        debugPrint("DEBUG: Response from backend: ${response.statusCode}, Body: ${response.body}");
 
         if (response.statusCode == 200) {
           final responseBody = jsonDecode(response.body);
+          debugPrint("DEBUG: Parsed backend response: $responseBody");
 
           // Extract token and userId from the response
           final String? token = responseBody['token'];
           final String? userId = responseBody['userId'];
 
           if (token == null || userId == null) {
-            print("Error: Missing token or userId in backend response.");
+            debugPrint("ERROR: Missing token or userId in backend response.");
             throw Exception("Invalid response from backend: Missing token or userId.");
           }
 
@@ -79,20 +88,20 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           );
         } else {
           final responseBody = jsonDecode(response.body);
-          print("Backend error: ${responseBody['message']}");
+          debugPrint("ERROR: Backend error: ${responseBody['message']}");
 
           if (responseBody['message'] == 'Please set a password to continue.') {
-            print("Prompting user to set a password...");
+            debugPrint("DEBUG: Prompting user to set a password...");
             _promptForPassword(idToken);
           } else {
-            print("Unhandled backend error: ${responseBody['message']}");
+            debugPrint("ERROR: Unhandled backend error: ${responseBody['message']}");
           }
         }
       } else {
-        print("Google sign-in canceled by the user.");
+        debugPrint("DEBUG: Google sign-in canceled by the user.");
       }
     } catch (error) {
-      print("Google sign-in failed: $error");
+      debugPrint("ERROR: Google sign-in failed: $error");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Google sign-in failed. Please try again.")),
       );
@@ -115,7 +124,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
             TextButton(
               onPressed: () async {
                 final password = _passwordController.text.trim();
-                print("User entered password: $password");
+                debugPrint("DEBUG: User entered password: $password");
 
                 final setPasswordResponse = await http.post(
                   Uri.parse('$apiBaseUrl/auth/google/callback'),
@@ -128,13 +137,13 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   }),
                 );
 
-                print("Response from backend after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
+                debugPrint("DEBUG: Response after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
 
                 if (setPasswordResponse.statusCode == 200) {
-                  print("Password set successfully. Navigating to home...");
+                  debugPrint("DEBUG: Password set successfully. Navigating to home...");
                   Navigator.pushNamed(context, '/home');
                 } else {
-                  print("Failed to set password.");
+                  debugPrint("ERROR: Failed to set password.");
                 }
               },
               child: Text('Set Password'),
@@ -173,7 +182,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
             children: [
               // Google logo or icon
               Image.asset(
-                'assets/google_logo.png', // Add your Google logo here
+                'assets/google_logo.png', // Ensure this asset is available
                 width: 120,
               ),
               SizedBox(height: 30),
