@@ -37,8 +37,7 @@ jobs:
         working-directory: bikesafe_app
         run: |
           echo "${{ secrets.ENV_FILE }}" | base64 -d > assets/.env
-
-
+          
       # 5. Create google-services.json from secret
       - name: Create google-services.json
         working-directory: bikesafe_app
