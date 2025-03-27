@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart'; // For PlatformException
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -17,7 +17,6 @@ class GoogleLoginScreen extends StatefulWidget {
 }
 
 class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
-  // Check that the env variable is loaded
   final String? googleWebClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: googleWebClientId,
@@ -31,7 +30,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
     debugPrint("DEBUG: GOOGLE_WEB_CLIENT_ID = $googleWebClientId");
   }
 
-  // Google Sign-In Function with improved debugging
+  // Google Sign-In Function with enhanced debugging
   Future<void> _loginWithGoogle() async {
     try {
       debugPrint("DEBUG: Attempting to sign in with Google...");
@@ -39,11 +38,9 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
       debugPrint("DEBUG: googleUser: $googleUser");
 
       if (googleUser != null) {
-        debugPrint(
-            "DEBUG: Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
+        debugPrint("DEBUG: Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
 
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         debugPrint("DEBUG: Received googleAuth: $googleAuth");
 
         final String? idToken = googleAuth.idToken;
@@ -54,8 +51,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           throw Exception("Google authentication tokens are null.");
         }
 
-        debugPrint(
-            "DEBUG: Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
+        debugPrint("DEBUG: Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
 
         // Send the ID token to the backend for authentication
         final response = await http.post(
@@ -69,24 +65,20 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           }),
         );
 
-        debugPrint(
-            "DEBUG: Response from backend: ${response.statusCode}, Body: ${response.body}");
+        debugPrint("DEBUG: Response from backend: ${response.statusCode}, Body: ${response.body}");
 
         if (response.statusCode == 200) {
           final responseBody = jsonDecode(response.body);
           debugPrint("DEBUG: Parsed backend response: $responseBody");
 
-          // Extract token and userId from the response
           final String? token = responseBody['token'];
           final String? userId = responseBody['userId'];
 
           if (token == null || userId == null) {
             debugPrint("ERROR: Missing token or userId in backend response.");
-            throw Exception(
-                "Invalid response from backend: Missing token or userId.");
+            throw Exception("Invalid response from backend: Missing token or userId.");
           }
 
-          // Navigate to main screen with arguments
           Navigator.pushNamed(
             context,
             '/main',
@@ -99,21 +91,24 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
             debugPrint("DEBUG: Prompting user to set a password...");
             _promptForPassword(idToken);
           } else {
-            debugPrint(
-                "ERROR: Unhandled backend error: ${responseBody['message']}");
+            debugPrint("ERROR: Unhandled backend error: ${responseBody['message']}");
           }
         }
       } else {
         debugPrint("DEBUG: Google sign-in canceled by the user.");
       }
+    } on PlatformException catch (e, stackTrace) {
+      debugPrint("ERROR: Google sign-in failed with PlatformException:");
+      debugPrint("  Code: ${e.code}");
+      debugPrint("  Message: ${e.message}");
+      debugPrint("  Details: ${e.details}");
+      debugPrint("  Stack trace: $stackTrace");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Google sign-in failed: ${e.message}")),
+      );
     } catch (error, stackTrace) {
-      debugPrint("ERROR: Google sign-in failed: $error");
+      debugPrint("ERROR: Unexpected error during Google sign-in: $error");
       debugPrint("Stack trace: $stackTrace");
-      if (error is PlatformException) {
-        debugPrint("Error Code: ${error.code}");
-        debugPrint("Error Message: ${error.message}");
-        debugPrint("Error Details: ${error.details}");
-      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Google sign-in failed. Please try again.")),
       );
@@ -149,12 +144,10 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   }),
                 );
 
-                debugPrint(
-                    "DEBUG: Response after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
+                debugPrint("DEBUG: Response after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
 
                 if (setPasswordResponse.statusCode == 200) {
-                  debugPrint(
-                      "DEBUG: Password set successfully. Navigating to home...");
+                  debugPrint("DEBUG: Password set successfully. Navigating to home...");
                   Navigator.pushNamed(context, '/home');
                 } else {
                   debugPrint("ERROR: Failed to set password.");
@@ -194,13 +187,11 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Google logo or icon
               Image.asset(
-                'assets/google_logo.png', // Ensure this asset is available
+                'assets/google_logo.png', // Ensure this asset exists
                 width: 120,
               ),
               SizedBox(height: 30),
-              // Login button
               ElevatedButton(
                 onPressed: _loginWithGoogle,
                 child: Text(
@@ -216,7 +207,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
-              // Back to login
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
