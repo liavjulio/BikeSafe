@@ -45,7 +45,17 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _initializeApp();
   }
-
+  Future<void> _logout() async {
+    try {
+      // Navigate to the login screen (or initial route) and remove previous routes.
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    } catch (e) {
+      debugPrint('❌ Error during logout: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error during logout. Please try again.')),
+      );
+    }
+  }
   Future<void> _initializeApp() async {
     try {
       // ✅ Initialize the Bluetooth Service first
@@ -67,12 +77,11 @@ class _MainScreenState extends State<MainScreen> {
       _notificationService.initializeFCM(
         userId: widget.userId,
         jwtToken: widget.token,
-                baseUrl: _baseUrl,
-
+        baseUrl: _baseUrl,
         context: context,
         onTokenRefresh: (newToken) {
-          debugPrint('🔄 Token refresh callback triggered with new token: $newToken');
-          
+          debugPrint(
+              '🔄 Token refresh callback triggered with new token: $newToken');
         },
       );
     } catch (e) {
@@ -179,6 +188,11 @@ class _MainScreenState extends State<MainScreen> {
                 },
               );
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            tooltip: 'Logout',
+            onPressed: _logout,
           ),
           IconButton(
             icon: const Icon(Icons.person),
