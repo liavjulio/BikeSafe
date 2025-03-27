@@ -10,20 +10,44 @@ admin.initializeApp({
 // ✅ Send notification
 async function sendFCMNotification(deviceTokens, payload) {
   try {
-    for (const token of deviceTokens) {
-      const message = {
-        token: token,
-        notification: {
-          title: payload.title,
-          body: payload.body,
-        },
-        data: payload.data || {}
-      };
-      const response = await admin.messaging().send(message);
-      console.log('Successfully sent message to token:', token, response);
-    }
+    // For this example, we send to the first token.
+    // In production, you might iterate or use sendMulticast.
+    const message = {
+      token: deviceTokens[0],
+      notification: {
+        title: payload.title,
+        body: payload.body,
+      },
+      data: payload.data || {},
+    };
+    
+    const response = await admin.messaging().send(message);
+    console.log('Successfully sent message:', response);
   } catch (error) {
     console.log('Error sending message:', error);
+    // Check if error indicates the token is no longer registered
+    if (
+      error.errorInfo &&
+      error.errorInfo.code === 'messaging/registration-token-not-registered'
+    ) {
+      // Remove the invalid token from the user's document
+      console.log('Removing invalid token from database...');
+      await removeInvalidToken(deviceTokens[0]);
+    }
+  }
+}
+
+async function removeInvalidToken(invalidToken) {
+  try {
+    // Find users that have this invalid token
+    const users = await User.find({ deviceTokens: invalidToken });
+    for (const user of users) {
+      user.deviceTokens = user.deviceTokens.filter((token) => token !== invalidToken);
+      await user.save();
+      console.log(`Removed invalid token from user: ${user._id}`);
+    }
+  } catch (err) {
+    console.error('Error removing invalid token:', err);
   }
 }
 // ✅ עדכון העדפות התראות של המשתמש
