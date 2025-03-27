@@ -44,7 +44,20 @@ jobs:
         working-directory: bikesafe_app
         run: |
           echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
-
+      - name: Create local.properties file
+        working-directory: bikesafe_app/android
+        run: |
+          echo "${{ secrets.LOCAL_PROPERTIES }}" | base64 -d > local.properties
+        
+      - name: Create client secret JSON file
+        working-directory: bikesafe_app/android/app
+        run: |
+          echo "${{ secrets.CLIENT_SECRET_JSON }}" | base64 -d > client_secret_1087501086163-ut0hsbk8oabd22tk8u6nh442pcvrsiju.apps.googleusercontent.com.json
+        
+      - name: Create strings.xml file
+        working-directory: bikesafe_app/android/app/src/main/res/values
+        run: |
+          echo "${{ secrets.STRINGS_XML }}" | base64 -d > strings.xml   
       # (Optional) Debug print – use caution with secrets
       - name: Debug .env content
         working-directory: bikesafe_app
