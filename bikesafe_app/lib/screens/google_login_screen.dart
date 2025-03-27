@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -21,7 +22,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: googleWebClientId,
   );
-  
+
   TextEditingController _passwordController = TextEditingController();
 
   @override
@@ -30,7 +31,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
     debugPrint("DEBUG: GOOGLE_WEB_CLIENT_ID = $googleWebClientId");
   }
 
-  // Google Sign-In Function
+  // Google Sign-In Function with improved debugging
   Future<void> _loginWithGoogle() async {
     try {
       debugPrint("DEBUG: Attempting to sign in with Google...");
@@ -38,9 +39,11 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
       debugPrint("DEBUG: googleUser: $googleUser");
 
       if (googleUser != null) {
-        debugPrint("DEBUG: Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
+        debugPrint(
+            "DEBUG: Google sign-in successful: ${googleUser.displayName}, Email: ${googleUser.email}");
 
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
         debugPrint("DEBUG: Received googleAuth: $googleAuth");
 
         final String? idToken = googleAuth.idToken;
@@ -51,11 +54,12 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           throw Exception("Google authentication tokens are null.");
         }
 
-        debugPrint("DEBUG: Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
+        debugPrint(
+            "DEBUG: Google Authentication Tokens - ID Token: $idToken, Access Token: $accessToken");
 
-        // Now send the ID token to the backend for authentication
+        // Send the ID token to the backend for authentication
         final response = await http.post(
-          Uri.parse('$apiBaseUrl/auth/google/callback'), // Dynamically selects API URL
+          Uri.parse('$apiBaseUrl/auth/google/callback'),
           headers: <String, String>{
             'Content-Type': 'application/json',
           },
@@ -65,7 +69,8 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           }),
         );
 
-        debugPrint("DEBUG: Response from backend: ${response.statusCode}, Body: ${response.body}");
+        debugPrint(
+            "DEBUG: Response from backend: ${response.statusCode}, Body: ${response.body}");
 
         if (response.statusCode == 200) {
           final responseBody = jsonDecode(response.body);
@@ -77,7 +82,8 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
 
           if (token == null || userId == null) {
             debugPrint("ERROR: Missing token or userId in backend response.");
-            throw Exception("Invalid response from backend: Missing token or userId.");
+            throw Exception(
+                "Invalid response from backend: Missing token or userId.");
           }
 
           // Navigate to main screen with arguments
@@ -89,19 +95,25 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
         } else {
           final responseBody = jsonDecode(response.body);
           debugPrint("ERROR: Backend error: ${responseBody['message']}");
-
           if (responseBody['message'] == 'Please set a password to continue.') {
             debugPrint("DEBUG: Prompting user to set a password...");
             _promptForPassword(idToken);
           } else {
-            debugPrint("ERROR: Unhandled backend error: ${responseBody['message']}");
+            debugPrint(
+                "ERROR: Unhandled backend error: ${responseBody['message']}");
           }
         }
       } else {
         debugPrint("DEBUG: Google sign-in canceled by the user.");
       }
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint("ERROR: Google sign-in failed: $error");
+      debugPrint("Stack trace: $stackTrace");
+      if (error is PlatformException) {
+        debugPrint("Error Code: ${error.code}");
+        debugPrint("Error Message: ${error.message}");
+        debugPrint("Error Details: ${error.details}");
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Google sign-in failed. Please try again.")),
       );
@@ -137,10 +149,12 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                   }),
                 );
 
-                debugPrint("DEBUG: Response after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
+                debugPrint(
+                    "DEBUG: Response after setting password: ${setPasswordResponse.statusCode}, Body: ${setPasswordResponse.body}");
 
                 if (setPasswordResponse.statusCode == 200) {
-                  debugPrint("DEBUG: Password set successfully. Navigating to home...");
+                  debugPrint(
+                      "DEBUG: Password set successfully. Navigating to home...");
                   Navigator.pushNamed(context, '/home');
                 } else {
                   debugPrint("ERROR: Failed to set password.");
@@ -186,7 +200,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                 width: 120,
               ),
               SizedBox(height: 30),
-
               // Login button
               ElevatedButton(
                 onPressed: _loginWithGoogle,
@@ -203,7 +216,6 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
                 ),
               ),
               SizedBox(height: 20),
-
               // Back to login
               TextButton(
                 onPressed: () {
