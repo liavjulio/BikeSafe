@@ -17,17 +17,7 @@ const locationRoutes = require('./routes/locationRoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const app = express();
-// Debug: Log current environment variables (only non-sensitive ones)
-console.log('=== Environment Variables ===');
-console.log('PORT:', process.env.PORT);
-console.log('MONGO_URI:', process.env.MONGO_URI);
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
-console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? '***' : 'not set');
-console.log('GOOGLE_CLIENT_ID_WEB:', process.env.GOOGLE_CLIENT_ID_WEB);
-console.log('GOOGLE_CLIENT_ID_ANDROID:', process.env.GOOGLE_CLIENT_ID_ANDROID);
-console.log('GOOGLE_CLIENT_ID_IOS:', process.env.GOOGLE_CLIENT_ID_IOS);
-console.log('JWT_SECRET:', process.env.JWT_SECRET ? '***' : 'not set');
-console.log('=============================');
+
 // Initialize Passport.js
 app.use(session({ secret: 'your-secret', resave: true, saveUninitialized: true }));
 app.use(passport.initialize());
@@ -45,7 +35,7 @@ const CLIENT_IDS = [
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "https://bikesafe-backend-latest.onrender.com/api/auth/google/callback",
+  callbackURL: "http://localhost:5001/auth/google/callback",
 }, async (accessToken, refreshToken, profile, done) => {
   console.log('Google OAuth Callback:', profile);
   try {
@@ -182,7 +172,7 @@ const CLIENT_IDS = [
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "http://localhost:5001/auth/google/callback",
+  callbackURL: "https://bikesafe-backend-latest.onrender.com/api/auth/google/callback",
 }, async (accessToken, refreshToken, profile, done) => {
   console.log('Google OAuth Callback:', profile);
   try {
