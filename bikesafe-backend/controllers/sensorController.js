@@ -101,7 +101,7 @@ exports.updateSensorData = async (req, res) => {
     const { sensorId, data } = req.body;
 
     try {
-        let sensor = await Sensor.findOne({ sensorId });
+        let sensor = await Sensor.findOne({ sensorId,userId: req.user.id });
 
         if (!sensor) {
             console.log("Sensor not found! Auto-creating sensor...");

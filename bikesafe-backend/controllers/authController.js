@@ -22,7 +22,7 @@ exports.register = async (req, res) => {
 
     // Create a new user
     const user = await User.create({ email, phone, password });
-
+    
     // Generate and store a verification code (you can store it in the user model or a temporary model)
     const verificationCode = generateVerificationCode();
     user.verificationCode = verificationCode;
