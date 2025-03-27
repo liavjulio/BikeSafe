@@ -77,7 +77,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Routes
-app.get('/auth/google',
+app.get('api/auth/google',
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 app.use('/api/auth', authRoutes);
