@@ -10,18 +10,18 @@ admin.initializeApp({
 // ✅ Send notification
 async function sendFCMNotification(deviceTokens, payload) {
   try {
-    const message = {
-      tokens: deviceTokens, // use the multicast field
-      notification: {
-        title: payload.title,
-        body: payload.body,
-      },
-      data: payload.data || {},
-    };
-    
-    const response = await admin.messaging().sendMulticast(message);
-    console.log('Successfully sent message:', response);
-    // Optionally, filter out invalid tokens from response.errors and update the user document
+    for (const token of deviceTokens) {
+      const message = {
+        token: token,
+        notification: {
+          title: payload.title,
+          body: payload.body,
+        },
+        data: payload.data || {}
+      };
+      const response = await admin.messaging().send(message);
+      console.log('Successfully sent message to token:', token, response);
+    }
   } catch (error) {
     console.log('Error sending message:', error);
   }
