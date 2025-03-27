@@ -11,16 +11,17 @@ admin.initializeApp({
 async function sendFCMNotification(deviceTokens, payload) {
   try {
     const message = {
-      token: deviceTokens[0], // במקרה של מכשיר בודד, או לולאה על כל הטוקנים
+      tokens: deviceTokens, // use the multicast field
       notification: {
         title: payload.title,
         body: payload.body,
       },
-      data: payload.data || {}
+      data: payload.data || {},
     };
     
-    const response = await admin.messaging().send(message);
+    const response = await admin.messaging().sendMulticast(message);
     console.log('Successfully sent message:', response);
+    // Optionally, filter out invalid tokens from response.errors and update the user document
   } catch (error) {
     console.log('Error sending message:', error);
   }
