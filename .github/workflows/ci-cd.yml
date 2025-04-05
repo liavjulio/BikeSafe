@@ -27,7 +27,7 @@ jobs:
           channel: 'stable'
           flutter-version: '3.27.1'
 
-      # 3. Install Flutter dependencies
+      # 3. Install sFlutter dependencies
       - name: Install Flutter dependencies
         run: flutter pub get
         working-directory: bikesafe_app
