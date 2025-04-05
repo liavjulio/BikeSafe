@@ -11,6 +11,7 @@ import 'screens/help_screen.dart';
 import 'screens/user_profile_screen.dart';
 import 'screens/battery_history_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import dotenv
+import 'screens/admin_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensures binding is initialized
@@ -75,7 +76,7 @@ class _BikeSafeAppState extends State<BikeSafeApp> {
           return MaterialPageRoute(
             builder: (context) => MainScreen(
               userId: args['userId'], // Pass userId from args
-              token: args['token'],   // Pass token from args
+              token: args['token'], // Pass token from args
               isAdmin: args['isAdmin'] ?? false,
               onThemeChanged: (themeMode) {
                 setState(() {
@@ -85,7 +86,13 @@ class _BikeSafeAppState extends State<BikeSafeApp> {
             ),
           );
         }
-
+        if (settings.name == '/admin-dashboard') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => AdminDashboardScreen(),
+            settings: settings,
+          );
+        }
         // Handle other routes
         if (settings.name == '/battery-history') {
           final args = settings.arguments as Map<String, dynamic>;
