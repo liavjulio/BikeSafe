@@ -158,6 +158,7 @@ const PORT = process.env.PORT || 5001;
 if (require.main === module) {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    console.log("✅ CLIENT_IDS used:", CLIENT_IDS);
   }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
       console.error(`Port ${PORT} is already in use.`);
