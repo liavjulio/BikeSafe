@@ -38,7 +38,7 @@ jobs:
         run: echo "${{ secrets.BIKE_SAFE }}" | base64 -d > bike-safe-24118-e2932191e023.json
 
       # Uncomment if test are available
-      # - name: Run Tests
+      # - name: Run Testss
       #   working-directory: bikesafe-backend
       #   run: npm test
 
