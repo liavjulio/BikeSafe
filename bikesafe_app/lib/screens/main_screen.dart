@@ -174,15 +174,26 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isAdmin ? 'Admin • BikeSafe Dashboard' : 'BikeSafe Dashboard'),
+        automaticallyImplyLeading: false, // removes the back arrow
+        backgroundColor: Colors.white,
+        elevation: 1,
         centerTitle: true,
+        title: Text(
+          widget.isAdmin ? 'Admin • BikeSafe Dashboard' : 'BikeSafe Dashboard',
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actionsIconTheme: IconThemeData(color: Colors.black87),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
             onPressed: () => Navigator.pushNamed(context, '/help'),
           ),
           IconButton(
-            icon: const Icon(Icons.feedback), // Feedback icon
+            icon: const Icon(Icons.feedback),
             onPressed: () {
               Navigator.pushNamed(
                 context,
@@ -201,11 +212,12 @@ class _MainScreenState extends State<MainScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () =>
-                Navigator.pushNamed(context, '/profile', arguments: {
-              'userId': widget.userId,
-              'token': widget.token,
-            }),
+            onPressed: () {
+              Navigator.pushNamed(context, '/profile', arguments: {
+                'userId': widget.userId,
+                'token': widget.token,
+              });
+            },
           ),
           IconButton(
             icon: const Icon(Icons.nightlight_round),
