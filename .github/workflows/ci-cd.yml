@@ -32,7 +32,7 @@ jobs:
         run: flutter pub get
         working-directory: bikesafe_app
 
-      # 4. Create .env file from secret
+      # 4. Create .env fisle from secret
       - name: Create .env file
         working-directory: bikesafe_app
         run: |
