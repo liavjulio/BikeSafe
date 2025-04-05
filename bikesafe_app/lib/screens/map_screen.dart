@@ -219,10 +219,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: Text('Bike Location'), automaticallyImplyLeading: false),
-      body: Stack(
+    return Stack(
         children: [
           GoogleMap(
             initialCameraPosition: CameraPosition(
@@ -265,8 +262,8 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
         ],
-      ),
-    );
+      );
+    
   }
 
   @override

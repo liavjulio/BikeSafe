@@ -173,61 +173,76 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // removes the back arrow
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        title: Text(
-          widget.isAdmin ? 'Admin • BikeSafe Dashboard' : 'BikeSafe Dashboard',
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actionsIconTheme: IconThemeData(color: Colors.black87),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => Navigator.pushNamed(context, '/help'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.feedback),
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                '/feedback',
-                arguments: {
-                  'userId': widget.userId,
-                  'token': widget.token,
-                },
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            tooltip: 'Logout',
-            onPressed: _logout,
-          ),
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.pushNamed(context, '/profile', arguments: {
-                'userId': widget.userId,
-                'token': widget.token,
-              });
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.nightlight_round),
-            onPressed: () => widget.onThemeChanged(
-              Theme.of(context).brightness == Brightness.dark
-                  ? ThemeMode.light
-                  : ThemeMode.dark,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(110),
+        child: AppBar(
+          automaticallyImplyLeading: false,
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.only(top: 40.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  widget.isAdmin
+                      ? 'Admin • BikeSafe Dashboard'
+                      : 'BikeSafe Dashboard',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center, // center icons!
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.help_outline),
+                      onPressed: () => Navigator.pushNamed(context, '/help'),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.feedback),
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/feedback',
+                          arguments: {
+                            'userId': widget.userId,
+                            'token': widget.token,
+                          },
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.exit_to_app),
+                      tooltip: 'Logout',
+                      onPressed: _logout,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.person),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        '/profile',
+                        arguments: {
+                          'userId': widget.userId,
+                          'token': widget.token,
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.nightlight_round),
+                      onPressed: () => widget.onThemeChanged(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? ThemeMode.light
+                            : ThemeMode.dark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
       body: Column(
         children: [
