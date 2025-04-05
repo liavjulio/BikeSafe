@@ -22,7 +22,8 @@ const userSchema = new mongoose.Schema({
     default: []
   },
   batteryCompany: { type: String },  
-  batteryType: { type: String }       
+  batteryType: { type: String },
+  isAdmin: { type: Boolean, default: false },       
 });
 
 const User = mongoose.model('User', userSchema);

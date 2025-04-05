@@ -1,3 +1,4 @@
+//bikesafe_app/lib/screens/google_login_screen.dart
 import 'dart:io'; // For detecting platform
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -79,6 +80,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           // Extract token and userId from the response
           final String? token = responseBody['token'];
           final String? userId = responseBody['userId'];
+          final bool isAdmin = responseBody['isAdmin'] ?? false;
 
           if (token == null || userId == null) {
             debugPrint("ERROR: Missing token or userId in backend response.");
@@ -90,7 +92,7 @@ class _GoogleLoginScreenState extends State<GoogleLoginScreen> {
           Navigator.pushNamed(
             context,
             '/main',
-            arguments: {'userId': userId, 'token': token},
+            arguments: {'userId': userId, 'token': token,'isAdmin': isAdmin,},
           );
         } else {
           final responseBody = jsonDecode(response.body);

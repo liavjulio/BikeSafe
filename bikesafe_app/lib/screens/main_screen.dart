@@ -19,6 +19,8 @@ final String _baseUrl = Constants.envBaseUrl;
 class MainScreen extends StatefulWidget {
   final String userId;
   final String token;
+  final bool isAdmin;
+
   final Function(ThemeMode) onThemeChanged;
 
   const MainScreen({
@@ -26,6 +28,7 @@ class MainScreen extends StatefulWidget {
     required this.userId,
     required this.token,
     required this.onThemeChanged,
+    this.isAdmin = false,
   }) : super(key: key);
 
   @override
@@ -45,10 +48,11 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _initializeApp();
   }
+
   Future<void> _logout() async {
     try {
       // Navigate to the login screen (or initial route) and remove previous routes.
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
       debugPrint('❌ Error during logout: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -56,6 +60,7 @@ class _MainScreenState extends State<MainScreen> {
       );
     }
   }
+
   Future<void> _initializeApp() async {
     try {
       // ✅ Initialize the Bluetooth Service first
@@ -169,7 +174,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BikeSafe Dashboard'),
+        title: Text(widget.isAdmin ? 'Admin • BikeSafe Dashboard' : 'BikeSafe Dashboard'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -329,7 +334,21 @@ class _MainScreenState extends State<MainScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-
+                    if (widget.isAdmin)
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.admin_panel_settings),
+                        label: Text('Admin Dashboard'),
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/admin-dashboard',
+                            arguments: {
+                              'userId': widget.userId,
+                              'token': widget.token,
+                            },
+                          );
+                        },
+                      ),
                     // Relay Controls in a Grid
                     GridView.count(
                       shrinkWrap: true,

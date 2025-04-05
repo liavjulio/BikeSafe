@@ -18,6 +18,8 @@ const authRoutes = require('./routes/authRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const sensorRoutes = require('./routes/sensorRoutes');
 const alertRoutes = require('./routes/alertRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
 
 const app = express();
 
@@ -84,6 +86,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/sensor', sensorRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Google callback route after successful Google login
 app.post('/api/auth/google/callback', async (req, res) => {
@@ -133,7 +136,7 @@ app.post('/api/auth/google/callback', async (req, res) => {
       }
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ token, userId: user._id });
+    res.status(200).json({ token, isAdmin: user.isAdmin,userId: user._id });
   } catch (error) {
     console.error('Error during Google authentication:', error);
     res.status(400).json({ message: 'Authentication failed', error: error.message });
