@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.bikesafe_app"
+    namespace = "com.example.bikesafe"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.bikesafe_app"
+        applicationId = "com.example.bikesafe"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -55,7 +55,7 @@ if (localPropertiesFile.exists()) {
 }
 android {
     defaultConfig {
-        applicationId "com.example.bikesafe_app"
+        applicationId "com.example.bikesafe"
 
         // ✅ Add these two lines to load API keys properly
         manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = localProperties.getProperty("GOOGLE_MAPS_API_KEY", "")
