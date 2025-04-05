@@ -92,7 +92,7 @@ app.use('/api/admin', adminRoutes);
 app.post('/api/auth/google/callback', async (req, res) => {
   const { idToken, password } = req.body;
   try {
-    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const client = new OAuth2Client();
     const ticket = await client.verifyIdToken({
       idToken: idToken,
       audience: CLIENT_IDS,
