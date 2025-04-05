@@ -30,12 +30,17 @@ app.use(passport.session());
 app.use(cors());
 app.use(bodyParser.json());
 
-// Define CLIENT_IDS for Google OAuth
+console.log("✅ GOOGLE_CLIENT_ID_WEB:", process.env.GOOGLE_CLIENT_ID_WEB);
+console.log("✅ GOOGLE_CLIENT_ID_ANDROID:", process.env.GOOGLE_CLIENT_ID_ANDROID);
+console.log("✅ GOOGLE_CLIENT_ID_IOS:", process.env.GOOGLE_CLIENT_ID_IOS);
+
 const CLIENT_IDS = [
   process.env.GOOGLE_CLIENT_ID_WEB,
   process.env.GOOGLE_CLIENT_ID_ANDROID,
   process.env.GOOGLE_CLIENT_ID_IOS
-];
+].filter(Boolean);
+
+console.log("✅ CLIENT_IDS used:", CLIENT_IDS);
 
 // Google OAuth Strategy
 passport.use(new GoogleStrategy({
