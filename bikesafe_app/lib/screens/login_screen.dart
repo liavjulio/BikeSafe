@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushNamed(
           context,
           '/main',
-          arguments: {'userId': userId, 'token': token},
+          arguments: {'userId': userId, 'token': token ,'isAdmin': response['isAdmin'] ?? false,},
         );
       } catch (e) {
         // Check if the error is about not being verified

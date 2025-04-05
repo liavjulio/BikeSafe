@@ -76,6 +76,7 @@ class _BikeSafeAppState extends State<BikeSafeApp> {
             builder: (context) => MainScreen(
               userId: args['userId'], // Pass userId from args
               token: args['token'],   // Pass token from args
+              isAdmin: args['isAdmin'] ?? false,
               onThemeChanged: (themeMode) {
                 setState(() {
                   _themeMode = themeMode; // Update theme when toggled
