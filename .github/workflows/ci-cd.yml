@@ -43,6 +43,9 @@ jobs:
         working-directory: bikesafe_app
         run: |
           echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+      - name: Restore key.properties
+        run: echo "${{ secrets.KEY_PROPERTIES_FILE }}" | base64 -d > android/key.properties  
+        working-directory: bikesafe_app  
       - name: Create Release Keystore
         working-directory: bikesafe_app  
         run: echo "${{ secrets.MY_RELEASE_KEY_B64 }}" | base64 -d > android/app/my-release-key.jks    
