@@ -1,7 +1,8 @@
 //bikesafe-backend/controllers/authController.js
 const User = require('../models/User');
 const Location = require('../models/Location'); // Import Location model
-
+const Sensor = require('../models/Sensor');
+const SensorHistory = require('../models/SensorHistory');
 const jwt = require('jsonwebtoken');
 const emailSender = require('../utils/emailSender');
 
@@ -75,7 +76,7 @@ exports.login = async (req, res) => {
     await user.save();
 
     // Generate a JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id ,isAdmin: user.isAdmin}, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({
       token,
       userId: user._id,
@@ -179,7 +180,10 @@ exports.deleteUserAccount = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    await Location.deleteMany({ userId: userId });
+    // Delete all related data
+    await Location.deleteMany({ userId });
+    await Sensor.deleteMany({ userId });
+    await SensorHistory.deleteMany({ userId });
 
     await User.findByIdAndDelete(userId);
     res.status(200).json({ message: 'Account deleted successfully' });

@@ -1,7 +1,8 @@
 // controllers/adminController.js
 const User = require('../models/User');
 const Location = require('../models/Location');
-
+const Sensor = require('../models/Sensor');
+const SensorHistory = require('../models/SensorHistory');
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password -verificationCode');
@@ -17,7 +18,8 @@ exports.deleteUserById = async (req, res) => {
     const userId = req.params.userId;
     await User.findByIdAndDelete(userId);
     await Location.deleteMany({ userId });
-
+    await Sensor.deleteMany({ userId });
+    await SensorHistory.deleteMany({ userId });
     res.status(200).json({ message: 'User and related data deleted' });
   } catch (err) {
     console.error('❌ Failed to delete user:', err);

@@ -135,7 +135,7 @@ app.post('/api/auth/google/callback', async (req, res) => {
         return res.status(400).json({ message: 'Please set a password to continue.' });
       }
     }
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id,isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token, isAdmin: user.isAdmin,userId: user._id });
   } catch (error) {
     console.error('Error during Google authentication:', error);

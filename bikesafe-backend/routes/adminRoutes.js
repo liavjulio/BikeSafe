@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('../middleware/authMiddleware');
 
 router.get('/users', authMiddleware, requireAdmin, adminController.getAllUsers);
 router.delete('/users/:userId', authMiddleware, requireAdmin, adminController.deleteUserById);
